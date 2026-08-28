@@ -2,7 +2,7 @@
 
 Guia de referência em SQL (MySQL) construído a partir das aulas e exercícios da disciplina **Banco de Dados e Aplicações** — comandos, padrões de uso e, principalmente, os **erros reais** encontrados durante a prática e como resolvê-los.
 
-**🔗 [Ver o guia publicado](https://SEU_USUARIO.github.io/sql-study-notes/)**
+**🔗 [Ver o guia publicado](https://Kevely-ux.github.io/sql-study-notes/)**
 
 ---
 
@@ -40,7 +40,7 @@ Construído como uma única página estática (HTML/CSS puro, sem dependências 
 Não precisa de nenhuma instalação — é um arquivo HTML estático:
 
 ```bash
-git clone https://github.com/SEU_USUARIO/sql-study-notes.git
+git clone https://github.com/Kevely-ux/sql-study-notes.git
 cd sql-study-notes
 # abra o index.html diretamente no navegador
 ```
