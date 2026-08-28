@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guia de SQL — Pessoa e Automóvel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --paper: #F4F6F8;
+    --surface: #FFFFFF;
+    --ink: #1B2430;
+    --ink-soft: #55606C;
+    --ink-faint: #8793A0;
+    --line: #DCE3E9;
+    --accent: #2B6CB0;
+    --accent-ink: #1B4C82;
+    --accent-soft: #E7EEF6;
+    --good: #2F7D53;
+    --good-soft: #E6F4EC;
+    --warn: #966017;
+    --warn-soft: #FBF0DD;
+    --bad: #B23A2E;
+    --bad-soft: #FBEAE7;
+    --code-bg: #10151D;
+    --code-fg: #E4E9F0;
+    --code-comment: #7C8899;
+    --shadow: 0 1px 2px rgba(27,36,48,.06), 0 8px 24px -12px rgba(27,36,48,.12);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #12161C;
+      --surface: #1A212B;
+      --ink: #E7ECF1;
+      --ink-soft: #9FAAB6;
+      --ink-faint: #6B7684;
+      --line: #2A323C;
+      --accent: #6BA3E0;
+      --accent-ink: #BBDBFF;
+      --accent-soft: #1E2C3B;
+      --good: #5FBE8B;
+      --good-soft: #1B2C22;
+      --warn: #E0B357;
+      --warn-soft: #332911;
+      --bad: #E58579;
+      --bad-soft: #3A211F;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #12161C;
+    --surface: #1A212B;
+    --ink: #E7ECF1;
+    --ink-soft: #9FAAB6;
+    --ink-faint: #6B7684;
+    --line: #2A323C;
+    --accent: #6BA3E0;
+    --accent-ink: #BBDBFF;
+    --accent-soft: #1E2C3B;
+    --good: #5FBE8B;
+    --good-soft: #1B2C22;
+    --warn: #E0B357;
+    --warn-soft: #332911;
+    --bad: #E58579;
+    --bad-soft: #3A211F;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+    font-size: 16.5px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: "Archivo", "Segoe UI", sans-serif;
+    text-wrap: balance;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+
+  code, pre, .mono {
+    font-family: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+
+  a { color: var(--accent-ink); }
+
+  .shell {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+    padding: 40px 0 32px;
+  }
+  .eyebrow {
+    font-family: "Archivo", sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 22px;
+    height: 2px;
+    background: var(--accent);
+    display: inline-block;
+  }
+  h1.title {
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 800;
+    margin: 14px 0 10px;
+    letter-spacing: -.01em;
+  }
+  .dek {
+    max-width: 62ch;
+    color: var(--ink-soft);
+    font-size: 17.5px;
+    margin: 0;
+  }
+  .header-meta {
+    margin-top: 22px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .meta-chip {
+    font-family: "Archivo", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    border: 1px solid var(--line);
+    border-radius: 99px;
+    padding: 5px 12px;
+    background: var(--paper);
+  }
+
+  /* ---------- Layout: nav rail + content ---------- */
+  main.layout {
+    display: grid;
+    grid-template-columns: 230px minmax(0,1fr);
+    gap: 44px;
+    padding: 40px 0 90px;
+    align-items: start;
+  }
+  @media (max-width: 860px) {
+    main.layout { grid-template-columns: 1fr; }
+  }
+
+  nav.toc {
+    position: sticky;
+    top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-family: "Archivo", sans-serif;
+  }
+  nav.toc .toc-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 8px;
+  }
+  nav.toc a {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    text-decoration: none;
+    padding: 7px 10px;
+    border-radius: 8px;
+    border-left: 2px solid transparent;
+  }
+  nav.toc a:hover { color: var(--accent-ink); background: var(--accent-soft); }
+  nav.toc a.err-link { color: var(--bad); }
+
+  /* ---------- Sections ---------- */
+  section.topic {
+    scroll-margin-top: 24px;
+    padding-bottom: 46px;
+    margin-bottom: 46px;
+    border-bottom: 1px solid var(--line);
+  }
+  section.topic:last-child { border-bottom: none; }
+
+  .topic-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 6px; }
+  .topic-num {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-faint);
+    flex: none;
+  }
+  h2.topic-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+  }
+  .topic-intro {
+    color: var(--ink-soft);
+    max-width: 68ch;
+    margin: 10px 0 22px;
+  }
+
+  h3.sub {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 26px 0 10px;
+    color: var(--ink);
+  }
+
+  p { max-width: 70ch; }
+  p.tight { margin: 8px 0; }
+
+  /* ---------- Code blocks ---------- */
+  .code-wrap { margin: 14px 0 18px; }
+  .code-label {
+    font-family: "Archivo", sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 6px;
+  }
+  pre.code {
+    background: var(--code-bg);
+    color: var(--code-fg);
+    border-radius: 10px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-size: 13.5px;
+    line-height: 1.6;
+    margin: 0;
+    box-shadow: var(--shadow);
+  }
+  pre.code .kw { color: #7FB0E8; font-weight: 600; }
+  pre.code .str { color: #C7D98E; }
+  pre.code .cm { color: var(--code-comment); font-style: italic; }
+  pre.code .fn { color: #E0A96D; }
+
+  /* ---------- Callouts ---------- */
+  .callout {
+    display: flex;
+    gap: 12px;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin: 16px 0;
+    font-size: 14.5px;
+    max-width: 70ch;
+  }
+  .callout .cicon { flex: none; font-family: "Archivo", sans-serif; font-weight: 800; font-size: 12px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; margin-top: 1px; }
+  .callout p { margin: 0; max-width: none; }
+  .callout p + p { margin-top: 6px; }
+  .callout.warn { background: var(--warn-soft); color: var(--ink); }
+  .callout.warn .cicon { background: var(--warn); color: var(--surface); }
+  .callout.good { background: var(--good-soft); color: var(--ink); }
+  .callout.good .cicon { background: var(--good); color: var(--surface); }
+  .callout.bad { background: var(--bad-soft); color: var(--ink); }
+  .callout.bad .cicon { background: var(--bad); color: var(--surface); }
+
+  /* ---------- Cheat table (quick ref inside topics) ---------- */
+  .table-wrap { overflow-x: auto; margin: 10px 0 4px; -webkit-overflow-scrolling: touch; }
+  .kv-table { width: 100%; min-width: 480px; border-collapse: collapse; margin: 0; font-size: 14px; }
+  .kv-table th, .kv-table td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .kv-table th { font-family: "Archivo", sans-serif; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-faint); font-weight: 700; }
+  .kv-table td.mono { font-family: "JetBrains Mono", monospace; font-size: 13px; }
+
+  /* ---------- Error reference table ---------- */
+  .err-table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); box-shadow: var(--shadow); }
+  table.err-table { width: 100%; border-collapse: collapse; min-width: 720px; font-size: 13.5px; }
+  table.err-table th {
+    font-family: "Archivo", sans-serif;
+    font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+    color: var(--ink-faint);
+    text-align: left; padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+  }
+  table.err-table td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.err-table tr:last-child td { border-bottom: none; }
+  table.err-table td.code-cell { font-family: "JetBrains Mono", monospace; font-size: 12.5px; white-space: nowrap; }
+  .err-badge {
+    display: inline-block; font-family: "JetBrains Mono", monospace; font-size: 12px; font-weight: 600;
+    background: var(--bad-soft); color: var(--bad); border-radius: 6px; padding: 2px 7px;
+  }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 26px 0 50px;
+    color: var(--ink-faint);
+    font-size: 13px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { scroll-behavior: auto !important; }
+  }
+  html { scroll-behavior: smooth; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="shell">
+    <div class="eyebrow">Material de estudo</div>
+    <h1 class="title">SQL na prática: pessoa e automóvel</h1>
+    <p class="dek">Um guia de consulta rápida com tudo que apareceu nas aulas e exercícios — do <code class="mono">CREATE TABLE</code> às <code class="mono">VIEW</code>s — organizado pra você revisar antes da próxima lista, com os erros reais que você encontrou e como resolver cada um.</p>
+    <div class="header-meta">
+      <span class="meta-chip">MySQL / MySQL Workbench</span>
+      <span class="meta-chip">Base: pessoa · automovel · pessoa_automovel</span>
+      <span class="meta-chip">Aulas 01–04 · Exercícios 3–6</span>
+      <span class="meta-chip">12 tópicos + referência de erros</span>
+    </div>
+  </div>
+</header>
+
+<main class="layout shell">
+  <nav class="toc">
+    <div class="toc-label">Neste guia</div>
+    <a href="#criar-tabelas">1. Criar tabelas</a>
+    <a href="#inserir-dados">2. Inserir dados</a>
+    <a href="#consultar">3. Consultar (SELECT)</a>
+    <a href="#combinar">4. Combinar consultas</a>
+    <a href="#juntar-tabelas">5. Juntar tabelas</a>
+    <a href="#agrupar">6. Agrupar e somar</a>
+    <a href="#with">7. WITH (CTE)</a>
+    <a href="#subqueries">8. Subqueries</a>
+    <a href="#atualizar">9. Atualizar dados</a>
+    <a href="#indices">10. Índices</a>
+    <a href="#views">11. Views</a>
+    <a href="#erros" class="err-link">12. Referência de erros ↓</a>
+  </nav>
+
+  <div class="content">
+
+    <section class="topic" id="criar-tabelas">
+      <div class="topic-head"><span class="topic-num">01</span><h2 class="topic-title">Criar tabelas</h2></div>
+      <p class="topic-intro">Toda tabela precisa de uma chave primária, e toda <code class="mono">FOREIGN KEY</code> precisa apontar pra uma coluna que <strong>já existe</strong> na própria tabela — o SQL não cria a coluna sozinho.</p>
+
+      <div class="code-wrap">
+        <div class="code-label">Estrutura de referência</div>
+        <pre class="code"><span class="kw">CREATE TABLE</span> pessoa (
+    id INT <span class="kw">AUTO_INCREMENT</span>,
+    nome VARCHAR(100),
+    profissao VARCHAR(45),
+    cnh VARCHAR(1),
+    <span class="kw">PRIMARY KEY</span>(id)
+);
+
+<span class="kw">CREATE TABLE</span> automovel (
+    id INT <span class="kw">AUTO_INCREMENT</span>,
+    carro_moto VARCHAR(10),
+    modelo VARCHAR(45),
+    preco DECIMAL(10,2),
+    id_pessoa INT,               <span class="cm">-- precisa existir antes do FOREIGN KEY</span>
+    <span class="kw">PRIMARY KEY</span>(id),
+    <span class="kw">FOREIGN KEY</span>(id_pessoa) <span class="kw">REFERENCES</span> pessoa(id)
+);</pre>
+      </div>
+
+      <div class="callout bad">
+        <span class="cicon">✕</span>
+        <div>
+          <p><strong>Erro clássico:</strong> declarar <code class="mono">FOREIGN KEY(id_pessoa)</code> sem antes criar a coluna <code class="mono">id_pessoa INT</code> na tabela. Dá <code class="mono">Error 1072</code>.</p>
+        </div>
+      </div>
+
+      <h3 class="sub">Escolhendo o tamanho da coluna</h3>
+      <p class="tight"><code class="mono">VARCHAR(1)</code> só cabe <strong>1 caractere</strong>. Se o valor real é uma palavra (<code class="mono">'carro'</code>, <code class="mono">'moto'</code>), a coluna precisa de espaço — <code class="mono">VARCHAR(10)</code>, por exemplo. Já <code class="mono">'S'</code>/<code class="mono">'N'</code> cabe em <code class="mono">VARCHAR(1)</code> numa boa.</p>
+      <p class="tight"><code class="mono">DECIMAL</code> sozinho (sem parênteses) vira <code class="mono">DECIMAL(10,0)</code> — ou seja, <strong>sem casas decimais</strong>. Pra preço, use <code class="mono">DECIMAL(10,2)</code>.</p>
+    </section>
+
+    <section class="topic" id="inserir-dados">
+      <div class="topic-head"><span class="topic-num">02</span><h2 class="topic-title">Inserir dados</h2></div>
+      <p class="topic-intro">Sem lista de colunas, o MySQL espera um valor pra <strong>cada coluna da tabela, na ordem em que foi criada</strong> — incluindo o <code class="mono">id</code>. Por isso, sempre nomear as colunas evita erro de contagem e deixa o script à prova de mudanças futuras na tabela.</p>
+
+      <div class="code-wrap">
+        <div class="code-label">Forma segura</div>
+        <pre class="code"><span class="kw">INSERT INTO</span> pessoa (nome, profissao, cnh) <span class="kw">VALUES</span>
+('paulo', 'maestro', 'S'),
+('henrique', 'medico', 'N');
+
+<span class="kw">INSERT INTO</span> automovel (carro_moto, modelo, preco, id_pessoa) <span class="kw">VALUES</span>
+('moto', 'XT', <span class="fn">30000.00</span>, 5),
+('carro', 'civic', <span class="fn">45000.00</span>, 5);</pre>
+      </div>
+
+      <div class="callout warn">
+        <span class="cicon">!</span>
+        <div>
+          <p><strong>Ponto ≠ vírgula.</strong> Em SQL o ponto é o separador <em>decimal</em>, não de milhar. <code class="mono">'30.000'</code> vira <strong>30,00</strong> (trinta), não trinta mil. Pra R$ 30.000, escreva <code class="mono">30000.00</code>.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="topic" id="consultar">
+      <div class="topic-head"><span class="topic-num">03</span><h2 class="topic-title">Consultar dados</h2></div>
+      <p class="topic-intro"><code class="mono">AS</code> dá um apelido de exibição a uma coluna — não transforma nem reinterpreta o valor, só troca o rótulo no resultado. <code class="mono">CASE WHEN</code> troca um valor por outro conforme uma condição.</p>
+
+      <div class="code-wrap">
+        <div class="code-label">Alias e condicional</div>
+        <pre class="code"><span class="kw">SELECT</span> nome <span class="kw">AS</span> nome_completo,
+       <span class="kw">CASE WHEN</span> cnh = 'S' <span class="kw">THEN</span> 'Sim' <span class="kw">ELSE</span> 'Não' <span class="kw">END AS</span> possui_cnh
+<span class="kw">FROM</span> pessoa;</pre>
+      </div>
+
+      <div class="table-wrap"><table class="kv-table">
+        <tr><th>Cláusula</th><th>Pra que serve</th></tr>
+        <tr><td class="mono">AS</td><td>Renomear coluna/tabela só na exibição do resultado</td></tr>
+        <tr><td class="mono">WHERE</td><td>Filtrar linhas antes de agrupar</td></tr>
+        <tr><td class="mono">ORDER BY ... DESC</td><td>Ordenar do maior pro menor</td></tr>
+        <tr><td class="mono">LIMIT n</td><td>Trazer só as <em>n</em> primeiras linhas do resultado</td></tr>
+      </table></div>
+
+      <h3 class="sub">CASE aninhado</h3>
+      <p class="tight">Um <code class="mono">CASE</code> pode conter outro <code class="mono">CASE</code> dentro do <code class="mono">ELSE</code> — útil quando as condições têm prioridade (a primeira que bater "vence").</p>
+      <div class="code-wrap">
+        <pre class="code"><span class="kw">SELECT</span> valor,
+    <span class="kw">CASE</span>
+        <span class="kw">WHEN</span> valor % 2 = 0 <span class="kw">THEN</span> <span class="str">'Par'</span>
+        <span class="kw">ELSE CASE</span>
+            <span class="kw">WHEN</span> valor % 5 = 0 <span class="kw">THEN</span> <span class="str">'Múltiplo de 5'</span>
+            <span class="kw">WHEN</span> valor % 3 = 0 <span class="kw">THEN</span> <span class="str">'Múltiplo de 3'</span>
+            <span class="kw">ELSE</span> <span class="str">'Ímpar'</span>
+        <span class="kw">END</span>
+    <span class="kw">END AS</span> analise
+<span class="kw">FROM</span> numero;</pre>
+      </div>
+      <p class="tight">Repare a ordem: só entra no <code class="mono">CASE</code> de dentro quem <strong>não</strong> é par — por isso um múltiplo de 6 (par e múltiplo de 3) sai como <code class="mono">'Par'</code>, não <code class="mono">'Múltiplo de 3'</code>. A primeira condição que bate sempre ganha.</p>
+    </section>
+
+    <section class="topic" id="combinar">
+      <div class="topic-head"><span class="topic-num">04</span><h2 class="topic-title">Combinar consultas</h2></div>
+      <p class="topic-intro">Diferente de <code class="mono">JOIN</code> (que junta colunas lado a lado), <code class="mono">UNION</code>/<code class="mono">INTERSECT</code>/<code class="mono">EXCEPT</code> combinam o <strong>resultado</strong> de dois <code class="mono">SELECT</code>s, um embaixo do outro. As duas consultas precisam ter o mesmo número de colunas.</p>
+
+      <div class="table-wrap"><table class="kv-table">
+        <tr><th>Comando</th><th>O que traz</th></tr>
+        <tr><td class="mono">UNION</td><td>Tudo dos dois SELECTs, <strong>sem repetir</strong> valores iguais</td></tr>
+        <tr><td class="mono">UNION ALL</td><td>Tudo dos dois SELECTs, <strong>pode repetir</strong></td></tr>
+        <tr><td class="mono">INTERSECT</td><td>Só o que aparece <strong>nos dois</strong> resultados</td></tr>
+        <tr><td class="mono">EXCEPT</td><td>O que está no 1º SELECT e <strong>não</strong> está no 2º</td></tr>
+      </table></div>
+
+      <div class="code-wrap">
+        <div class="code-label">Os 4 lado a lado</div>
+        <pre class="code"><span class="kw">SELECT</span> valor <span class="kw">FROM</span> numero
+<span class="kw">UNION</span>
+<span class="kw">SELECT</span> valor <span class="kw">FROM</span> numero_par;
+<span class="cm">-- 1,2,3,4,5,6,7,8,9,10 (sem duplicar o que já é comum)</span>
+
+<span class="kw">SELECT</span> valor <span class="kw">FROM</span> numero
+<span class="kw">INTERSECT</span>
+<span class="kw">SELECT</span> valor <span class="kw">FROM</span> numero_par;
+<span class="cm">-- só os valores que existem nas duas tabelas</span>
+
+<span class="kw">SELECT</span> valor <span class="kw">FROM</span> numero
+<span class="kw">EXCEPT</span>
+<span class="kw">SELECT</span> valor <span class="kw">FROM</span> numero_par;
+<span class="cm">-- os valores de "numero" que NÃO aparecem em "numero_par"</span></pre>
+      </div>
+      <p class="tight"><code class="mono">UNION</code> é como simular um <code class="mono">FULL JOIN</code> (que o MySQL não tem de fábrica) — traz tudo de um lado e do outro, sem duplicar.</p>
+    </section>
+
+    <section class="topic" id="juntar-tabelas">
+      <div class="topic-head"><span class="topic-num">05</span><h2 class="topic-title">Juntar tabelas</h2></div>
+      <p class="topic-intro"><code class="mono">JOIN</code> só traz linhas que batem nas duas tabelas. <code class="mono">LEFT JOIN</code> traz <strong>tudo</strong> da tabela da esquerda, com <code class="mono">NULL</code> onde não houver correspondência.</p>
+
+      <div class="code-wrap">
+        <div class="code-label">Só quem tem automóvel</div>
+        <pre class="code"><span class="kw">SELECT</span> pessoa.nome, automovel.modelo
+<span class="kw">FROM</span> pessoa
+<span class="kw">JOIN</span> automovel <span class="kw">ON</span> automovel.id_pessoa = pessoa.id;</pre>
+      </div>
+
+      <div class="code-wrap">
+        <div class="code-label">Todo mundo, mesmo sem automóvel</div>
+        <pre class="code"><span class="kw">SELECT</span> pessoa.nome, automovel.modelo
+<span class="kw">FROM</span> pessoa
+<span class="kw">LEFT JOIN</span> automovel <span class="kw">ON</span> automovel.id_pessoa = pessoa.id;
+<span class="cm">-- quem não tem carro aparece com modelo = NULL</span></pre>
+      </div>
+
+      <h3 class="sub">Achar quem não tem correspondência</h3>
+      <div class="code-wrap">
+        <pre class="code"><span class="kw">SELECT</span> nome <span class="kw">FROM</span> pessoa p
+<span class="kw">WHERE NOT EXISTS</span> (
+    <span class="kw">SELECT</span> 1 <span class="kw">FROM</span> pessoa_automovel pa <span class="kw">WHERE</span> pa.nome_pessoa = p.nome
+);</pre>
+      </div>
+      <div class="callout warn">
+        <span class="cicon">!</span>
+        <div>
+          <p><strong>Armadilha do <code class="mono">NOT IN</code> com <code class="mono">NULL</code>:</strong> se a lista da subquery tiver algum <code class="mono">NULL</code> no meio, <code class="mono">NOT IN</code> para de funcionar e não retorna <strong>nenhuma</strong> linha — nem as óbvias. <code class="mono">NOT EXISTS</code> não tem esse problema; prefira ele.</p>
+          <p><strong>Armadilha da linha fantasma:</strong> se uma tabela foi montada com <code class="mono">LEFT JOIN</code>, ela pode ter uma linha com o nome preenchido mas as outras colunas em <code class="mono">NULL</code> — isso "engana" o <code class="mono">NOT IN</code>/<code class="mono">NOT EXISTS</code>, porque tecnicamente aquele nome <em>está</em> na lista.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="topic" id="agrupar">
+      <div class="topic-head"><span class="topic-num">06</span><h2 class="topic-title">Agrupar e somar</h2></div>
+      <p class="topic-intro">Sempre que uma função de agregação (<code class="mono">SUM</code>, <code class="mono">COUNT</code>, <code class="mono">AVG</code>...) aparece junto de outras colunas no <code class="mono">SELECT</code>, essas outras colunas precisam estar no <code class="mono">GROUP BY</code>.</p>
+
+      <div class="code-wrap">
+        <div class="code-label">Valor total da garagem por pessoa</div>
+        <pre class="code"><span class="kw">SELECT</span> pessoa.nome,
+       <span class="kw">SUM</span>(automovel.preco) <span class="kw">AS</span> total_garagem
+<span class="kw">FROM</span> pessoa
+<span class="kw">JOIN</span> automovel <span class="kw">ON</span> automovel.id_pessoa = pessoa.id
+<span class="kw">GROUP BY</span> pessoa.id, pessoa.nome
+<span class="kw">ORDER BY</span> total_garagem <span class="kw">DESC</span>;</pre>
+      </div>
+
+      <h3 class="sub">Achar duplicatas</h3>
+      <div class="code-wrap">
+        <pre class="code"><span class="kw">SELECT</span> nome_pessoa, modelo, preco, <span class="kw">COUNT</span>(*) <span class="kw">AS</span> qtd
+<span class="kw">FROM</span> pessoa_automovel
+<span class="kw">GROUP BY</span> nome_pessoa, modelo, preco
+<span class="kw">HAVING COUNT</span>(*) > 1;</pre>
+      </div>
+      <p class="tight"><code class="mono">HAVING</code> é o "<code class="mono">WHERE</code> depois de agrupar" — filtra grupos, não linhas individuais. <code class="mono">WHERE</code> não pode usar o resultado de uma função de agregação; <code class="mono">HAVING</code> pode.</p>
+
+      <div class="callout bad">
+        <span class="cicon">✕</span>
+        <div>
+          <p><strong>Por que <code class="mono">WHERE media &gt; 6</code> não funciona</strong> (mesmo com <code class="mono">media</code> sendo o alias de <code class="mono">AVG(nota)</code>): o MySQL avalia o <code class="mono">WHERE</code> <em>antes</em> de calcular o <code class="mono">GROUP BY</code>/agregações — nesse momento o alias ainda não existe (<code class="mono">Error 1054: Unknown column 'media'</code>). E trocar pelo <code class="mono">AVG(nota) &gt; 6</code> direto no <code class="mono">WHERE</code> também quebra (<code class="mono">Error 1111: Invalid use of group function</code>), porque função de agregação não pode ir no <code class="mono">WHERE</code>.</p>
+          <p><strong>Solução:</strong> usar <code class="mono">HAVING media &gt; 6</code> — ele roda depois do agrupamento, já com o alias calculado.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="topic" id="with">
+      <div class="topic-head"><span class="topic-num">07</span><h2 class="topic-title">WITH (CTE)</h2></div>
+      <p class="topic-intro"><code class="mono">WITH</code> dá um nome a uma consulta pra você reaproveitar ela como se fosse uma tabela temporária, dentro do mesmo comando — deixa consultas grandes mais legíveis, e permite usar o resultado em <code class="mono">SELECT</code>, <code class="mono">INSERT</code>, <code class="mono">UPDATE</code> ou <code class="mono">DELETE</code>.</p>
+
+      <div class="code-wrap">
+        <div class="code-label">Nomeando o resultado do GROUP BY pra filtrar por ele</div>
+        <pre class="code"><span class="kw">WITH</span> info_temp(numero, quantidade, media) <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> numero, <span class="kw">COUNT</span>(numero) <span class="kw">AS</span> qtd, <span class="kw">AVG</span>(nota) <span class="kw">AS</span> media
+    <span class="kw">FROM</span> exercicio
+    <span class="kw">GROUP BY</span> numero
+)
+<span class="kw">SELECT</span> numero, quantidade, media
+<span class="kw">FROM</span> info_temp
+<span class="kw">WHERE</span> media > 6
+<span class="kw">ORDER BY</span> quantidade <span class="kw">DESC</span>;</pre>
+      </div>
+      <p class="tight">Aqui o <code class="mono">WHERE media &gt; 6</code> funciona numa boa — porque <code class="mono">info_temp</code> já é o resultado pronto do agrupamento, o alias <code class="mono">media</code> já existe como coluna de verdade.</p>
+
+      <h3 class="sub">WITH + INSERT / UPDATE / DELETE</h3>
+      <div class="code-wrap">
+        <div class="code-label">Populando outra tabela com o resultado</div>
+        <pre class="code"><span class="kw">INSERT INTO</span> calculado(exercicio, quantidade, media)
+<span class="kw">WITH</span> info_temp(numero, quantidade, media) <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> numero, <span class="kw">COUNT</span>(numero), <span class="kw">AVG</span>(nota)
+    <span class="kw">FROM</span> exercicio <span class="kw">GROUP BY</span> numero
+)
+<span class="kw">SELECT</span> numero, quantidade, media <span class="kw">FROM</span> info_temp <span class="kw">WHERE</span> media > 6;</pre>
+      </div>
+      <div class="code-wrap">
+        <div class="code-label">Atualizando outra tabela via JOIN com o CTE</div>
+        <pre class="code"><span class="kw">WITH</span> info_temp(numero, quantidade, media) <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> numero, <span class="kw">COUNT</span>(numero), <span class="kw">AVG</span>(nota)
+    <span class="kw">FROM</span> exercicio <span class="kw">GROUP BY</span> numero
+)
+<span class="kw">UPDATE</span> calculado
+<span class="kw">INNER JOIN</span> info_temp <span class="kw">ON</span> info_temp.numero = calculado.exercicio
+<span class="kw">SET</span> calculado.quantidade = info_temp.quantidade,
+    calculado.media = info_temp.media;</pre>
+      </div>
+      <p class="tight">Repare que aqui o <code class="mono">UPDATE</code> usa um <code class="mono">JOIN</code> com o CTE, em vez de uma subquery escalar no <code class="mono">SET</code> — funciona porque atualiza várias linhas de uma vez, cada uma casando com sua linha correspondente em <code class="mono">info_temp</code>.</p>
+    </section>
+
+    <section class="topic" id="subqueries">
+      <div class="topic-head"><span class="topic-num">08</span><h2 class="topic-title">Subqueries</h2></div>
+      <p class="topic-intro">Uma subquery é uma consulta <strong>dentro</strong> de outra. <code class="mono">INSERT INTO ... SELECT</code> não conta — ali o <code class="mono">SELECT</code> não está aninhado em nada, é só a fonte de dados do <code class="mono">INSERT</code>.</p>
+
+      <h3 class="sub">5 jeitos de usar dentro de um SELECT</h3>
+      <div class="table-wrap"><table class="kv-table">
+        <tr><th>Onde</th><th>Exemplo</th><th>Cuidado</th></tr>
+        <tr><td>Como coluna</td><td class="mono">SELECT valor, (SELECT texto FROM t WHERE ...)</td><td>Só pode devolver <strong>1 coluna</strong> — senão <span class="mono">Error 1241</span></td></tr>
+        <tr><td>No <span class="mono">WHERE</span></td><td class="mono">WHERE valor IN (SELECT ...)</td><td>Pode devolver várias linhas</td></tr>
+        <tr><td>No <span class="mono">FROM</span> (como tabela)</td><td class="mono">FROM (SELECT ...) AS tabela</td><td>Precisa de <span class="mono">AS</span> pra dar nome à tabela derivada</td></tr>
+        <tr><td>No <span class="mono">HAVING</span></td><td class="mono">HAVING valor IN (SELECT ...)</td><td>Filtra grupos já formados</td></tr>
+        <tr><td>No <span class="mono">ORDER BY</span></td><td class="mono">ORDER BY (SELECT texto FROM ...)</td><td>Ordena por um valor buscado em outra tabela</td></tr>
+      </table></div>
+
+      <div class="callout bad">
+        <span class="cicon">✕</span>
+        <div>
+          <p><code class="mono">SELECT valor, (SELECT texto, texto_ingles FROM t WHERE ...)</code> quebra com <strong><span class="mono">Error 1241</span> — Operand should contain 1 column(s)</strong>. Uma subquery usada como coluna só pode trazer <strong>1 coluna só</strong>; pra trazer duas, use <code class="mono">JOIN</code> em vez disso.</p>
+        </div>
+      </div>
+
+      <h3 class="sub">Em INSERT, UPDATE e DELETE</h3>
+      <div class="table-wrap"><table class="kv-table">
+        <tr><th>Comando</th><th>Uso</th><th>Exemplo</th></tr>
+        <tr><td class="mono">INSERT</td><td>Como fonte inteira dos dados</td><td class="mono">INSERT INTO t SELECT ... FROM outra</td></tr>
+        <tr><td class="mono">INSERT</td><td>Como parte de um valor</td><td class="mono">VALUES ((SELECT COUNT(*)+1 FROM t), '')</td></tr>
+        <tr><td class="mono">UPDATE</td><td>Como novo valor</td><td class="mono">SET texto = (SELECT ... WHERE id = t.id)</td></tr>
+        <tr><td class="mono">UPDATE</td><td>Como filtro</td><td class="mono">WHERE valor IN (SELECT ...)</td></tr>
+        <tr><td class="mono">DELETE</td><td>Como filtro</td><td class="mono">WHERE valor IN (SELECT ...)</td></tr>
+      </table></div>
+
+      <div class="callout bad">
+        <span class="cicon">✕</span>
+        <div>
+          <p>Uma subquery usada como valor único (ex: <code class="mono">SET preco = (SELECT modelo FROM automovel WHERE id_pessoa = 5)</code>) quebra com <strong>"Subquery returns more than 1 row"</strong> se a pessoa tiver mais de um automóvel. <code class="mono">LIMIT 1</code> "resolve" tecnicamente, mas descarta dado — normalmente sinal de que o problema pede um <code class="mono">JOIN</code>, não uma subquery escalar.</p>
+        </div>
+      </div>
+
+      <div class="callout warn">
+        <span class="cicon">!</span>
+        <div>
+          <p><strong>Regra importante:</strong> em <code class="mono">INSERT</code>, <code class="mono">UPDATE</code> e <code class="mono">DELETE</code>, a subquery <strong>não pode usar a mesma tabela</strong> que já está sendo alterada na query de fora (o MySQL bloqueia isso pra evitar referência circular).</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="topic" id="atualizar">
+      <div class="topic-head"><span class="topic-num">09</span><h2 class="topic-title">Atualizar dados</h2></div>
+      <p class="topic-intro"><code class="mono">UPDATE</code> sem <code class="mono">WHERE</code> muda <strong>a tabela inteira</strong>. Sempre confira com um <code class="mono">SELECT</code> usando a mesma condição antes de rodar o <code class="mono">UPDATE</code> de verdade.</p>
+
+      <div class="code-wrap">
+        <div class="code-label">Atualizar usando valores de outra tabela</div>
+        <pre class="code"><span class="kw">UPDATE</span> pessoa_automovel
+<span class="kw">SET</span> preco = (<span class="kw">SELECT</span> preco <span class="kw">FROM</span> automovel <span class="kw">WHERE</span> id = 1)
+<span class="kw">WHERE</span> modelo = (<span class="kw">SELECT</span> modelo <span class="kw">FROM</span> automovel <span class="kw">WHERE</span> id = 1)
+  <span class="kw">AND</span> nome_pessoa = (
+      <span class="kw">SELECT</span> nome <span class="kw">FROM</span> pessoa <span class="kw">WHERE</span> id = (<span class="kw">SELECT</span> id_pessoa <span class="kw">FROM</span> automovel <span class="kw">WHERE</span> id = 1)
+  );</pre>
+      </div>
+      <p class="tight">Leia de dentro pra fora: cada subquery busca <em>um</em> valor (preço, modelo, id da pessoa, nome) — é o mesmo que escrever os valores fixos na mão, só que o SQL busca sozinho, então o script continua certo se o automóvel <code class="mono">id = 1</code> mudar de dono ou de preço.</p>
+
+      <div class="callout warn">
+        <span class="cicon">!</span>
+        <div>
+          <p><strong>"Safe Update Mode" (Error 1175):</strong> isso é uma trava do MySQL Workbench, não do banco — ele bloqueia <code class="mono">UPDATE</code>/<code class="mono">DELETE</code> quando não reconhece uma coluna de chave direta no <code class="mono">WHERE</code> (mesmo que a condição esteja correta, como com subqueries). Resolve com:</p>
+          <pre class="code" style="margin-top:8px"><span class="kw">SET</span> SQL_SAFE_UPDATES = 0;</pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="topic" id="indices">
+      <div class="topic-head"><span class="topic-num">10</span><h2 class="topic-title">Índices</h2></div>
+      <p class="topic-intro">Um índice é como o índice remissivo de um livro: em vez de vasculhar linha por linha, o banco pula direto pro que interessa. Só compensa em tabelas grandes — em 5 linhas você não sente diferença, mas é boa prática indexar colunas usadas com frequência em <code class="mono">WHERE</code>, <code class="mono">JOIN</code> ou <code class="mono">ORDER BY</code>.</p>
+
+      <div class="code-wrap">
+        <pre class="code"><span class="kw">CREATE INDEX</span> idx_modelo <span class="kw">ON</span> pessoa_automovel (modelo);
+
+<span class="cm">-- conferir que foi criado</span>
+<span class="kw">SHOW INDEX FROM</span> pessoa_automovel;
+
+<span class="cm">-- remover</span>
+<span class="kw">DROP INDEX</span> idx_modelo <span class="kw">ON</span> pessoa_automovel;</pre>
+      </div>
+
+      <h3 class="sub">Medindo o ganho de verdade</h3>
+      <p class="tight"><code class="mono">EXPLAIN ANALYZE</code> na frente de um <code class="mono">SELECT</code> mostra como o MySQL realmente executou a busca — se ele fez um <em>table scan</em> (leu linha por linha) ou um <em>index scan</em> (usou o índice), e quanto tempo levou cada etapa.</p>
+      <div class="code-wrap">
+        <pre class="code"><span class="kw">EXPLAIN ANALYZE SELECT</span> valor <span class="kw">FROM</span> numero_par <span class="kw">WHERE</span> valor > 100;</pre>
+      </div>
+      <p class="tight">Com poucas linhas (dezenas), o ganho é quase zero — chega a ser irrelevante. Com <strong>~120 mil linhas</strong>, o mesmo índice derrubou o tempo de uma busca por faixa (<code class="mono">valor &gt; 100 AND valor &lt; 1000</code>) de ~16ms pra ~0,08ms — quase 200x mais rápido. A lição: índice é sobre <em>escala</em>, não sobre a tabela pequena que você está testando agora.</p>
+
+      <div class="callout warn">
+        <span class="cicon">!</span>
+        <div>
+          <p><strong>Não exagere:</strong> cada índice deixa <code class="mono">INSERT</code>/<code class="mono">UPDATE</code>/<code class="mono">DELETE</code> um pouco mais lentos, porque o banco precisa manter a estrutura do índice atualizada a cada mudança. Indexe só as colunas que você realmente filtra ou ordena com frequência.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="topic" id="views">
+      <div class="topic-head"><span class="topic-num">11</span><h2 class="topic-title">Views</h2></div>
+      <p class="topic-intro">Uma <code class="mono">VIEW</code> é um <code class="mono">SELECT</code> salvo com um nome — funciona como uma "tabela" pra consultar, mas <strong>não guarda dado nenhum</strong>. Toda vez que você consulta a view, o MySQL roda o <code class="mono">SELECT</code> de novo por trás dos panos.</p>
+
+      <div class="code-wrap">
+        <div class="code-label">Criar e consultar</div>
+        <pre class="code"><span class="kw">CREATE VIEW</span> view_aluno <span class="kw">AS</span>
+<span class="kw">SELECT</span> nome, ra
+<span class="kw">FROM</span> aluno
+<span class="kw">ORDER BY</span> nome;
+
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> view_aluno;
+<span class="kw">DESC</span> view_aluno;   <span class="cm">-- mostra só as colunas nome e ra</span></pre>
+      </div>
+
+      <h3 class="sub">Pra que serve</h3>
+      <div class="table-wrap"><table class="kv-table">
+        <tr><th>Situação</th><th>Como a view ajuda</th></tr>
+        <tr><td>Segurança por coluna</td><td>MySQL só dá permissão por <em>tabela</em> inteira; uma view expõe só as colunas que a pessoa pode ver (ex: nome e ra, escondendo cpf)</td></tr>
+        <tr><td>Consulta complicada e recorrente</td><td>Um relatório com vários <span class="mono">JOIN</span>s vira um <span class="mono">SELECT * FROM view_relatorio</span> simples</td></tr>
+        <tr><td>Combinar várias tabelas</td><td>O <span class="mono">SELECT</span> por trás pode ter <span class="mono">JOIN</span>, <span class="mono">UNION</span>, <span class="mono">INTERSECT</span> — não é limitado a 1 tabela</td></tr>
+      </table></div>
+
+      <div class="callout good">
+        <span class="cicon">✓</span>
+        <div>
+          <p><strong>A view é "ao vivo":</strong> ela não copia os dados da tabela original. Se alguém inserir um novo aluno na tabela <code class="mono">aluno</code>, ele já aparece em <code class="mono">view_aluno</code> na próxima consulta, sem precisar recriar a view — desde que ele se encaixe na condição do <code class="mono">SELECT</code> que a monta.</p>
+        </div>
+      </div>
+
+      <h3 class="sub">Dá pra INSERT/UPDATE/DELETE numa view?</h3>
+      <p class="tight">Depende. Se a view for baseada em <strong>1 tabela só, com um SELECT simples</strong> (sem <span class="mono">UNION</span>, sem agregação), sim — e a mudança acontece de verdade na tabela original.</p>
+      <div class="code-wrap">
+        <pre class="code"><span class="kw">UPDATE</span> view_aluno <span class="kw">SET</span> ra = <span class="fn">'999'</span> <span class="kw">WHERE</span> nome = <span class="str">'Danilo'</span>;
+<span class="cm">-- isso muda a linha na tabela "aluno" de verdade, não só na view</span></pre>
+      </div>
+
+      <div class="callout bad">
+        <span class="cicon">✕</span>
+        <div>
+          <p><strong><span class="mono">Error 1288</span> — "target table is not updatable":</strong> acontece quando a view combina mais de uma fonte (ex: tem <span class="mono">UNION</span> no meio). Views assim são só para <strong>leitura</strong>.</p>
+          <p><strong><span class="mono">Error 1423</span> — "underlying table doesn't have a default value":</strong> aparece como <em>warning</em> ao dar <span class="mono">INSERT</span> numa view que não inclui todas as colunas <span class="mono">NOT NULL</span> da tabela original — o insert até funciona, mas as colunas de fora ficam com valor "vazio" (string vazia, <span class="mono">0000-00-00</span>...), o que geralmente não é o que você quer.</p>
+        </div>
+      </div>
+
+      <div class="code-wrap">
+        <pre class="code"><span class="kw">DROP VIEW</span> view_aluno;</pre>
+      </div>
+    </section>
+
+    <section class="topic" id="erros">
+      <div class="topic-head"><span class="topic-num">12</span><h2 class="topic-title">Referência rápida de erros</h2></div>
+      <p class="topic-intro">Os erros reais que apareceram nos exercícios — guarde essa tabela, 90% dos erros de SQL de iniciante se repetem.</p>
+
+      <div class="err-table-wrap">
+        <table class="err-table">
+          <tr><th>Código</th><th>Mensagem</th><th>Causa</th><th>Solução</th></tr>
+          <tr>
+            <td class="code-cell"><span class="err-badge">1072</span></td>
+            <td>Key column 'x' doesn't exist in table</td>
+            <td>FK aponta pra uma coluna que não foi criada</td>
+            <td>Criar a coluna antes do <span class="mono">FOREIGN KEY</span></td>
+          </tr>
+          <tr>
+            <td class="code-cell"><span class="err-badge">1050</span></td>
+            <td>Table 'x' already exists</td>
+            <td>Tentou criar uma tabela que já existe</td>
+            <td><span class="mono">DROP TABLE IF EXISTS</span> antes, se quiser recriar</td>
+          </tr>
+          <tr>
+            <td class="code-cell"><span class="err-badge">1136</span></td>
+            <td>Column count doesn't match value count</td>
+            <td><span class="mono">INSERT</span> sem lista de colunas, com número de valores errado</td>
+            <td>Sempre listar as colunas: <span class="mono">INSERT INTO t (a,b) VALUES (...)</span></td>
+          </tr>
+          <tr>
+            <td class="code-cell"><span class="err-badge">1075</span></td>
+            <td>Incorrect table definition — autoincrement needs a key</td>
+            <td>Coluna <span class="mono">AUTO_INCREMENT</span> sem ser chave/índice</td>
+            <td>Declarar <span class="mono">PRIMARY KEY</span> nessa coluna</td>
+          </tr>
+          <tr>
+            <td class="code-cell"><span class="err-badge">1175</span></td>
+            <td>You are using safe update mode...</td>
+            <td>Workbench bloqueando UPDATE/DELETE sem chave "reconhecível" no WHERE</td>
+            <td><span class="mono">SET SQL_SAFE_UPDATES = 0;</span> ou desativar em Preferences</td>
+          </tr>
+          <tr>
+            <td class="code-cell"><span class="err-badge">—</span></td>
+            <td>Subquery returns more than 1 row</td>
+            <td>Subquery escalar (num <span class="mono">SET</span>/<span class="mono">SELECT</span>) devolveu várias linhas</td>
+            <td>Usar <span class="mono">JOIN</span>/<span class="mono">GROUP BY</span> em vez de subquery escalar, ou repensar o filtro</td>
+          </tr>
+          <tr>
+            <td class="code-cell"><span class="err-badge">—</span></td>
+            <td><span class="mono">NOT IN</span> não retorna nada</td>
+            <td>A lista da subquery tem um <span class="mono">NULL</span> no meio</td>
+            <td>Trocar por <span class="mono">NOT EXISTS</span></td>
+          </tr>
+          <tr>
+            <td class="code-cell"><span class="err-badge">1054</span></td>
+            <td>Unknown column 'x' in 'where clause'</td>
+            <td>Usar o alias de uma função de agregação (ex: <span class="mono">media</span>) dentro do <span class="mono">WHERE</span></td>
+            <td>Trocar <span class="mono">WHERE</span> por <span class="mono">HAVING</span></td>
+          </tr>
+          <tr>
+            <td class="code-cell"><span class="err-badge">1111</span></td>
+            <td>Invalid use of group function</td>
+            <td>Usar <span class="mono">AVG()</span>/<span class="mono">COUNT()</span> etc. direto no <span class="mono">WHERE</span></td>
+            <td>Trocar <span class="mono">WHERE</span> por <span class="mono">HAVING</span></td>
+          </tr>
+          <tr>
+            <td class="code-cell"><span class="err-badge">1241</span></td>
+            <td>Operand should contain 1 column(s)</td>
+            <td>Subquery usada como coluna do <span class="mono">SELECT</span> devolvendo mais de 1 coluna</td>
+            <td>Selecionar só 1 coluna na subquery, ou usar <span class="mono">JOIN</span></td>
+          </tr>
+          <tr>
+            <td class="code-cell"><span class="err-badge">1288</span></td>
+            <td>The target table of the UPDATE/DELETE is not updatable</td>
+            <td><span class="mono">UPDATE</span>/<span class="mono">DELETE</span>/<span class="mono">INSERT</span> numa view que combina mais de 1 fonte (ex: tem <span class="mono">UNION</span>)</td>
+            <td>Alterar a tabela original diretamente — view assim é só leitura</td>
+          </tr>
+          <tr>
+            <td class="code-cell"><span class="err-badge">1423</span></td>
+            <td>Field of view '...' underlying table doesn't have a default value</td>
+            <td><span class="mono">INSERT</span> numa view que não cobre todas as colunas <span class="mono">NOT NULL</span> da tabela original</td>
+            <td>Incluir as colunas obrigatórias na view, ou inserir direto na tabela</td>
+          </tr>
+        </table>
+      </div>
+    </section>
+
+    <section class="topic" id="proximo">
+      <div class="topic-head"><span class="topic-num">→</span><h2 class="topic-title">De olho no próximo exercício</h2></div>
+      <div class="callout good">
+        <span class="cicon">✓</span>
+        <div>
+          <p><strong>Exercício 6</strong> (tabelas <code class="mono">filme</code> e <code class="mono">personagem</code>) é sobre <code class="mono">VIEW</code>, e pede pra combinar quase tudo desse guia: <code class="mono">GROUP BY</code> + <code class="mono">COUNT</code> (itens 3-4), ordenação por várias colunas (item 5), 3 views encadeadas — uma usando a outra (itens 8-12) — e uma busca "não pode usar a coluna X no filtro" (item 13), que é basicamente o mesmo truque de achar quem não tem correspondência que você já usou com <code class="mono">NOT EXISTS</code> na seção 5.</p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer class="shell">
+  Guia montado a partir dos exercícios com as tabelas <code class="mono">pessoa</code>, <code class="mono">automovel</code> e <code class="mono">pessoa_automovel</code>.
+</footer>
+
+</body>
+</html>
