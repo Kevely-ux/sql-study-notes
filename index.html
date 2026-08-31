@@ -324,12 +324,12 @@
   <div class="shell">
     <div class="eyebrow">Material de estudo</div>
     <h1 class="title">SQL na prática: pessoa e automóvel</h1>
-    <p class="dek">Um guia de consulta rápida com tudo que apareceu nas aulas e exercícios — do <code class="mono">CREATE TABLE</code> às <code class="mono">VIEW</code>s — organizado pra você revisar antes da próxima lista, com os erros reais que você encontrou e como resolver cada um.</p>
+    <p class="dek">Um guia de consulta rápida com tudo que apareceu nas aulas e exercícios — do <code class="mono">CREATE TABLE</code> às <code class="mono">VIEW</code>s, <code class="mono">TRIGGER</code>s e <code class="mono">FUNCTION</code>s — organizado pra você revisar antes da próxima lista, com os erros reais que você encontrou e como resolver cada um.</p>
     <div class="header-meta">
       <span class="meta-chip">MySQL / MySQL Workbench</span>
       <span class="meta-chip">Base: pessoa · automovel · pessoa_automovel</span>
-      <span class="meta-chip">Aulas 01–04 · Exercícios 3–6</span>
-      <span class="meta-chip">12 tópicos + referência de erros</span>
+      <span class="meta-chip">Aulas 01–05 · Exercícios 3–7</span>
+      <span class="meta-chip">14 tópicos + referência de erros</span>
     </div>
   </div>
 </header>
@@ -348,7 +348,9 @@
     <a href="#atualizar">9. Atualizar dados</a>
     <a href="#indices">10. Índices</a>
     <a href="#views">11. Views</a>
-    <a href="#erros" class="err-link">12. Referência de erros ↓</a>
+    <a href="#trigger">12. Trigger</a>
+    <a href="#function">13. Function</a>
+    <a href="#erros" class="err-link">14. Referência de erros ↓</a>
   </nav>
 
   <div class="content">
@@ -739,8 +741,257 @@
       </div>
     </section>
 
+    <section class="topic" id="trigger">
+      <div class="topic-head"><span class="topic-num">12</span><h2 class="topic-title">Trigger</h2></div>
+      <p class="topic-intro">Um <code class="mono">TRIGGER</code> (gatilho) dispara uma ação automaticamente quando um <code class="mono">INSERT</code>, <code class="mono">UPDATE</code> ou <code class="mono">DELETE</code> acontece numa tabela — antes (<code class="mono">BEFORE</code>) ou depois (<code class="mono">AFTER</code>) do evento. Serve tanto pra <strong>validar</strong> dados antes de salvar quanto pra <strong>registrar histórico</strong> automaticamente.</p>
+
+      <div class="table-wrap"><table class="kv-table">
+        <tr><th>Tabela</th><th>Colunas</th></tr>
+        <tr><td class="mono">salario</td><td class="mono">id, nome_funcionario, remuneracao</td></tr>
+        <tr><td class="mono">log_salario</td><td class="mono">id, id_salario, nome_funcionario, remuneracao_anterior, remuneracao_nova, datahora, usuario</td></tr>
+      </table></div>
+
+      <div class="code-wrap">
+        <div class="code-label">Sintaxe base</div>
+        <pre class="code"><span class="kw">CREATE TRIGGER</span> &lt;nome trigger&gt;
+&lt;BEFORE <span class="kw">ou</span> AFTER&gt; &lt;INSERT <span class="kw">ou</span> UPDATE <span class="kw">ou</span> DELETE&gt;
+<span class="kw">ON</span> &lt;tabela&gt;
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+    &lt;comandos&gt;
+<span class="kw">END</span>;</pre>
+      </div>
+
+      <div class="callout warn">
+        <span class="cicon">!</span>
+        <div>
+          <p><strong><code class="mono">DELIMITER</code>:</strong> os comandos dentro do trigger já usam <code class="mono">;</code> pra terminar cada linha — e <code class="mono">;</code> também é o que marca o fim normal de uma query. Pra evitar que o MySQL corte o trigger no meio, muda-se o delimitador temporariamente (ex: <code class="mono">$$</code>) antes do <code class="mono">CREATE TRIGGER</code>, e volta pro padrão (<code class="mono">DELIMITER ;</code>) depois do <code class="mono">END</code>.</p>
+        </div>
+      </div>
+
+      <h3 class="sub">BEFORE INSERT — validar antes de salvar</h3>
+      <div class="code-wrap">
+        <pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE TRIGGER</span> trigger_before_insert_salario
+<span class="kw">BEFORE INSERT ON</span> salario
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">IF</span> NEW.remuneracao &lt; 0 <span class="kw">THEN</span>
+        <span class="kw">SIGNAL SQLSTATE</span> <span class="str">'45000'</span>
+        <span class="kw">SET</span> MESSAGE_TEXT = <span class="str">'Remuneração deve ser positiva'</span>;
+    <span class="kw">END IF</span>;
+<span class="kw">END</span> $$
+<span class="kw">DELIMITER</span> ;
+
+<span class="kw">INSERT INTO</span> salario(nome_funcionario, remuneracao) <span class="kw">VALUES</span>(<span class="str">'Alberto'</span>, -1000.00);
+<span class="cm">-- Error Code: 1644. Remuneração deve ser positiva</span></pre>
+      </div>
+      <p class="tight"><code class="mono">NEW</code> representa a linha que está <strong>sendo inserida</strong> — só existe em triggers de <code class="mono">INSERT</code>/<code class="mono">UPDATE</code>. <code class="mono">SIGNAL SQLSTATE '45000'</code> é como o trigger "lança" um erro personalizado (uma exceção definida pelo usuário), interrompendo o comando e devolvendo a mensagem em <code class="mono">MESSAGE_TEXT</code>.</p>
+
+      <h3 class="sub">AFTER INSERT — registrar automaticamente</h3>
+      <div class="code-wrap">
+        <pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE TRIGGER</span> trigger_after_insert_salario
+<span class="kw">AFTER INSERT ON</span> salario
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">INSERT INTO</span> log_salario(id_salario, nome_funcionario, remuneracao_anterior,
+                            remuneracao_nova, datahora, usuario)
+    <span class="kw">VALUES</span> (NEW.id, NEW.nome_funcionario, 0.0, NEW.remuneracao,
+            <span class="kw">CURRENT_TIMESTAMP</span>(), <span class="kw">USER</span>());
+<span class="kw">END</span> $$
+<span class="kw">DELIMITER</span> ;</pre>
+      </div>
+      <p class="tight">Todo <code class="mono">INSERT</code> em <code class="mono">salario</code> agora grava sozinho uma linha em <code class="mono">log_salario</code> — sem precisar lembrar de fazer isso manualmente em nenhum lugar do sistema.</p>
+
+      <h3 class="sub">BEFORE UPDATE — comparar valor antigo com novo</h3>
+      <div class="code-wrap">
+        <pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE TRIGGER</span> trigger_before_update_salario
+<span class="kw">BEFORE UPDATE ON</span> salario
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">IF</span> OLD.remuneracao &gt; NEW.remuneracao <span class="kw">THEN</span>
+        <span class="kw">SIGNAL SQLSTATE</span> <span class="str">'45000'</span>
+        <span class="kw">SET</span> MESSAGE_TEXT = <span class="str">'Não pode diminuir o salário do funcionário'</span>;
+    <span class="kw">END IF</span>;
+<span class="kw">END</span> $$
+<span class="kw">DELIMITER</span> ;
+
+<span class="kw">UPDATE</span> salario <span class="kw">SET</span> remuneracao = 500 <span class="kw">WHERE</span> id = 1;
+<span class="cm">-- Error Code: 1644. Não pode diminuir o salário do funcionário</span></pre>
+      </div>
+      <p class="tight">Em triggers de <code class="mono">UPDATE</code> existem os dois: <code class="mono">OLD</code> (a linha antes da mudança) e <code class="mono">NEW</code> (a linha depois) — dá pra comparar os dois valores na mesma condição.</p>
+
+      <h3 class="sub">AFTER UPDATE — buscando o valor anterior com subquery</h3>
+      <div class="code-wrap">
+        <pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE TRIGGER</span> trigger_after_update_salario
+<span class="kw">AFTER UPDATE ON</span> salario
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">DECLARE</span> salario_antigo <span class="kw">DECIMAL</span>(9,2);
+    <span class="kw">SET</span> salario_antigo = (<span class="kw">SELECT</span> remuneracao_nova
+                          <span class="kw">FROM</span> log_salario
+                          <span class="kw">WHERE</span> nome_funcionario = NEW.nome_funcionario
+                          <span class="kw">ORDER BY</span> id
+                          <span class="kw">LIMIT</span> 1);
+    <span class="kw">INSERT INTO</span> log_salario(id_salario, nome_funcionario, remuneracao_anterior, remuneracao_nova, datahora, usuario)
+    <span class="kw">VALUES</span> (NEW.id, NEW.nome_funcionario, salario_antigo, NEW.remuneracao, <span class="kw">CURRENT_TIMESTAMP</span>(), <span class="kw">USER</span>());
+<span class="kw">END</span> $$
+<span class="kw">DELIMITER</span> ;</pre>
+      </div>
+      <p class="tight"><code class="mono">DECLARE</code> cria uma variável local dentro do trigger — precisa vir logo no começo do <code class="mono">BEGIN</code>. Aqui ela guarda o último salário já registrado no log, pra usar como "remuneração anterior" da nova linha.</p>
+
+      <h3 class="sub">BEFORE DELETE — regra de negócio antes de apagar</h3>
+      <div class="code-wrap">
+        <pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE TRIGGER</span> trigger_before_delete_salario
+<span class="kw">BEFORE DELETE ON</span> salario
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">DECLARE</span> media_salario <span class="kw">DECIMAL</span>(9,2);
+    <span class="kw">DECLARE</span> maximo_salario <span class="kw">DECIMAL</span>(9,2);
+    <span class="kw">SET</span> media_salario = (<span class="kw">SELECT AVG</span>(remuneracao) <span class="kw">FROM</span> salario);
+    <span class="kw">SET</span> maximo_salario = (<span class="kw">SELECT MAX</span>(remuneracao) <span class="kw">FROM</span> salario);
+    <span class="kw">IF</span> OLD.remuneracao &lt; (media_salario/2) <span class="kw">OR</span> OLD.remuneracao = maximo_salario <span class="kw">THEN</span>
+        <span class="kw">SIGNAL SQLSTATE</span> <span class="str">'45000'</span>
+        <span class="kw">SET</span> MESSAGE_TEXT = <span class="str">'Não pode demitir quem recebe menos que metade da média, nem o dono (maior salário)'</span>;
+    <span class="kw">END IF</span>;
+<span class="kw">END</span> $$
+<span class="kw">DELIMITER</span> ;</pre>
+      </div>
+
+      <div class="callout bad">
+        <span class="cicon">✕</span>
+        <div>
+          <p><strong>Trigger e <code class="mono">FOREIGN KEY</code> são coisas diferentes que podem bloquear o mesmo <code class="mono">DELETE</code>.</strong> No exemplo, tentar apagar quem tem o <em>maior</em> salário é barrado pelo <strong>trigger</strong> (<code class="mono">Error 1644</code>). Já tentar apagar alguém que já tem linha em <code class="mono">log_salario</code> é barrado pela <strong><code class="mono">FOREIGN KEY</code></strong> (<code class="mono">Error 1451</code> — "Cannot delete or update a parent row"), não pelo trigger: o trigger até deixaria, mas a integridade referencial não deixa deletar um pai que ainda tem filho apontando pra ele.</p>
+        </div>
+      </div>
+
+      <h3 class="sub">AFTER DELETE</h3>
+      <div class="code-wrap">
+        <pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE TRIGGER</span> trigger_after_delete_salario
+<span class="kw">AFTER DELETE ON</span> salario
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+    &lt;comandos&gt;
+<span class="kw">END</span> $$
+<span class="kw">DELIMITER</span> ;</pre>
+      </div>
+      <p class="tight">Se o <code class="mono">DELETE</code> foi permitido, o <code class="mono">AFTER DELETE</code> roda depois — útil pra "limpar atrás", tipo apagar registros relacionados em outra tabela.</p>
+
+      <h3 class="sub">Consultar triggers já criados</h3>
+      <div class="code-wrap">
+        <pre class="code"><span class="kw">SHOW TRIGGERS</span>;
+<span class="kw">SHOW CREATE TRIGGER</span> trigger_before_insert_salario;</pre>
+      </div>
+
+      <div class="callout warn">
+        <span class="cicon">!</span>
+        <div>
+          <p><strong>Trigger não pode alterar a própria tabela que o disparou:</strong> um trigger de <code class="mono">INSERT</code> na tabela <code class="mono">salario</code> não pode fazer <code class="mono">INSERT</code> de volta em <code class="mono">salario</code> — o MySQL bloqueia (<code class="mono">Error 1442</code>) pra evitar loop infinito.</p>
+          <p><strong>Loop entre tabelas ainda é possível:</strong> se um trigger da tabela 1 escreve na tabela 2, e um trigger da tabela 2 escreve de volta na tabela 1, isso <strong>não</strong> é bloqueado automaticamente — cuidado ao desenhar triggers encadeados entre tabelas diferentes.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="topic" id="function">
+      <div class="topic-head"><span class="topic-num">13</span><h2 class="topic-title">Function</h2></div>
+      <p class="topic-intro">Uma <code class="mono">FUNCTION</code> definida pelo usuário funciona igual as prontas do MySQL (<code class="mono">AVG</code>, <code class="mono">COUNT</code>, <code class="mono">MAX</code>...) — recebe parâmetros, calcula algo e <strong>devolve um único valor</strong> com <code class="mono">RETURN</code>. Dá pra chamar dentro de um <code class="mono">SELECT</code>, coluna a coluna.</p>
+
+      <div class="code-wrap">
+        <div class="code-label">Sintaxe base</div>
+        <pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE FUNCTION</span> &lt;nome função&gt;(&lt;parâmetros&gt;)
+<span class="kw">RETURNS</span> &lt;tipo retorno&gt;
+&lt;tipo de função&gt;
+<span class="kw">BEGIN</span>
+    &lt;comandos&gt;
+    <span class="kw">RETURN</span> &lt;retorno&gt;;
+<span class="kw">END</span>$$
+<span class="kw">DELIMITER</span> ;</pre>
+      </div>
+
+      <h3 class="sub">Condição simples com IF/ELSE</h3>
+      <div class="code-wrap">
+        <pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE FUNCTION</span> verificar_salario_2000(salario <span class="kw">DECIMAL</span>(9,2))
+<span class="kw">RETURNS VARCHAR</span>(100)
+<span class="kw">DETERMINISTIC</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">DECLARE</span> resultado <span class="kw">VARCHAR</span>(100);
+    <span class="kw">IF</span> salario &gt;= 2000 <span class="kw">THEN SET</span> resultado = <span class="str">'Maior ou igual a 2000'</span>;
+    <span class="kw">ELSE SET</span> resultado = <span class="str">'Menor que 2000'</span>;
+    <span class="kw">END IF</span>;
+    <span class="kw">RETURN</span> resultado;
+<span class="kw">END</span>$$
+<span class="kw">DELIMITER</span> ;
+
+<span class="kw">SELECT</span> *, verificar_salario_2000(remuneracao) <span class="kw">FROM</span> salario;</pre>
+      </div>
+
+      <div class="table-wrap"><table class="kv-table">
+        <tr><th>nome_funcionario</th><th>remuneracao</th><th>verificar_salario_2000(remuneracao)</th></tr>
+        <tr><td>Alberto</td><td class="mono">1000.00</td><td>Menor que 2000</td></tr>
+        <tr><td>Bruno</td><td class="mono">1500.00</td><td>Menor que 2000</td></tr>
+        <tr><td>Clóvis</td><td class="mono">2000.00</td><td>Maior ou igual a 2000</td></tr>
+        <tr><td>Danilo</td><td class="mono">5000.00</td><td>Maior ou igual a 2000</td></tr>
+      </table></div>
+
+      <p class="tight"><code class="mono">DETERMINISTIC</code> avisa o MySQL que a função sempre devolve o <strong>mesmo resultado</strong> pros mesmos parâmetros de entrada — obrigatório declarar (ou <code class="mono">NOT DETERMINISTIC</code>) dependendo da configuração do servidor.</p>
+
+      <h3 class="sub">Calculando algo com base em outra tabela</h3>
+      <div class="code-wrap">
+        <pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE FUNCTION</span> verificar_salario_media(salario <span class="kw">DECIMAL</span>(9,2))
+<span class="kw">RETURNS VARCHAR</span>(100)
+<span class="kw">DETERMINISTIC</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">DECLARE</span> media <span class="kw">DECIMAL</span>(9,2);
+    <span class="kw">DECLARE</span> resultado <span class="kw">VARCHAR</span>(100);
+    <span class="kw">SET</span> media = (<span class="kw">SELECT AVG</span>(remuneracao) <span class="kw">FROM</span> salario);
+    <span class="kw">IF</span> salario &gt; media <span class="kw">THEN SET</span> resultado = <span class="str">'Salário maior do que a média'</span>;
+    <span class="kw">ELSE SET</span> resultado = <span class="str">'Salário menor ou igual do que a media'</span>;
+    <span class="kw">END IF</span>;
+    <span class="kw">RETURN</span> resultado;
+<span class="kw">END</span>$$
+<span class="kw">DELIMITER</span> ;</pre>
+      </div>
+      <p class="tight">A função roda a subquery <code class="mono">SELECT AVG(remuneracao) FROM salario</code> toda vez que é chamada — pra cada linha do <code class="mono">SELECT</code> externo. Funciona bem numa tabela pequena; numa tabela grande, vale pensar no custo de recalcular a média linha a linha.</p>
+
+      <h3 class="sub">Mais de um parâmetro</h3>
+      <div class="code-wrap">
+        <pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE FUNCTION</span> calcular_total_salario(salario <span class="kw">DECIMAL</span>(9,2), meses <span class="kw">INT</span>)
+<span class="kw">RETURNS DECIMAL</span>(9,2)
+<span class="kw">DETERMINISTIC</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">DECLARE</span> resultado <span class="kw">DECIMAL</span>(9,2);
+    <span class="kw">SET</span> resultado = salario * meses;
+    <span class="kw">RETURN</span> resultado;
+<span class="kw">END</span>$$
+<span class="kw">DELIMITER</span> ;
+
+<span class="kw">SELECT</span> nome_funcionario, calcular_total_salario(remuneracao, 8) <span class="kw">FROM</span> salario;
+<span class="cm">-- Alberto: 8000.00 · Bruno: 12000.00 · Clóvis: 16000.00 · Danilo: 40000.00</span></pre>
+      </div>
+
+      <div class="code-wrap">
+        <pre class="code"><span class="kw">DROP FUNCTION</span> verificar_salario_2000;</pre>
+      </div>
+
+      <div class="callout good">
+        <span class="cicon">✓</span>
+        <div>
+          <p><strong>Trigger vs Function, em uma frase:</strong> trigger reage sozinho a um <code class="mono">INSERT</code>/<code class="mono">UPDATE</code>/<code class="mono">DELETE</code> (você nunca "chama" ele); function você chama explicitamente, geralmente dentro de um <code class="mono">SELECT</code>, e ela sempre devolve um valor.</p>
+        </div>
+      </div>
+    </section>
+
     <section class="topic" id="erros">
-      <div class="topic-head"><span class="topic-num">12</span><h2 class="topic-title">Referência rápida de erros</h2></div>
+      <div class="topic-head"><span class="topic-num">14</span><h2 class="topic-title">Referência rápida de erros</h2></div>
       <p class="topic-intro">Os erros reais que apareceram nos exercícios — guarde essa tabela, 90% dos erros de SQL de iniciante se repetem.</p>
 
       <div class="err-table-wrap">
@@ -818,6 +1069,24 @@
             <td><span class="mono">INSERT</span> numa view que não cobre todas as colunas <span class="mono">NOT NULL</span> da tabela original</td>
             <td>Incluir as colunas obrigatórias na view, ou inserir direto na tabela</td>
           </tr>
+          <tr>
+            <td class="code-cell"><span class="err-badge">1644</span></td>
+            <td>&lt;mensagem definida por você&gt;</td>
+            <td>Um <span class="mono">TRIGGER</span> disparou <span class="mono">SIGNAL SQLSTATE '45000'</span> — exceção personalizada bloqueando a operação</td>
+            <td>Esperado: ajustar o dado pra respeitar a regra de negócio do trigger</td>
+          </tr>
+          <tr>
+            <td class="code-cell"><span class="err-badge">1442</span></td>
+            <td>Can't update table 'x' in stored function/trigger because it is already used by statement which invoked this stored function/trigger</td>
+            <td>Um <span class="mono">TRIGGER</span> tentou fazer <span class="mono">INSERT</span>/<span class="mono">UPDATE</span> na <strong>mesma tabela</strong> que disparou ele (evita loop infinito)</td>
+            <td>Mover essa lógica pra uma tabela diferente, ou tratar fora do trigger</td>
+          </tr>
+          <tr>
+            <td class="code-cell"><span class="err-badge">1451</span></td>
+            <td>Cannot delete or update a parent row: a foreign key constraint fails</td>
+            <td>Tentou apagar uma linha que ainda tem outra tabela apontando pra ela via <span class="mono">FOREIGN KEY</span></td>
+            <td>Apagar/atualizar primeiro os registros filhos, ou configurar <span class="mono">ON DELETE CASCADE</span></td>
+          </tr>
         </table>
       </div>
     </section>
@@ -827,7 +1096,8 @@
       <div class="callout good">
         <span class="cicon">✓</span>
         <div>
-          <p><strong>Exercício 6</strong> (tabelas <code class="mono">filme</code> e <code class="mono">personagem</code>) é sobre <code class="mono">VIEW</code>, e pede pra combinar quase tudo desse guia: <code class="mono">GROUP BY</code> + <code class="mono">COUNT</code> (itens 3-4), ordenação por várias colunas (item 5), 3 views encadeadas — uma usando a outra (itens 8-12) — e uma busca "não pode usar a coluna X no filtro" (item 13), que é basicamente o mesmo truque de achar quem não tem correspondência que você já usou com <code class="mono">NOT EXISTS</code> na seção 5.</p>
+          <p><strong>Exercício 7</strong> (tabelas <code class="mono">animal</code> e <code class="mono">animal_feroz</code>) junta tudo desse guia sobre <code class="mono">TRIGGER</code> e <code class="mono">FUNCTION</code>: um trigger <code class="mono">BEFORE INSERT</code> validando faixa de valor (itens 2-4), um <code class="mono">AFTER INSERT</code> condicional que só grava em <code class="mono">animal_feroz</code> quando o bicho é feroz (item 3), um <code class="mono">BEFORE UPDATE</code> bloqueando mudança de espécie (itens 5-6), um <code class="mono">AFTER UPDATE</code> incrementando contador (itens 7-8), <code class="mono">BEFORE</code>/<code class="mono">AFTER DELETE</code> (itens 9-12), e duas <code class="mono">FUNCTION</code>s — uma que consulta outra tabela pra decidir o retorno (item 13) e outra que só faz <code class="mono">IF/ELSE</code> puro sobre o parâmetro (item 15).</p>
+          <p><strong>Prazo:</strong> Turma A e Turma B — 13/09.</p>
         </div>
       </div>
     </section>
