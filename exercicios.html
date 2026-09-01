@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exercícios resolvidos — SQL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --paper: #F4F6F8;
+    --surface: #FFFFFF;
+    --ink: #1B2430;
+    --ink-soft: #55606C;
+    --ink-faint: #8793A0;
+    --line: #DCE3E9;
+    --accent: #2B6CB0;
+    --accent-ink: #1B4C82;
+    --accent-soft: #E7EEF6;
+    --good: #2F7D53;
+    --good-soft: #E6F4EC;
+    --warn: #966017;
+    --warn-soft: #FBF0DD;
+    --bad: #B23A2E;
+    --bad-soft: #FBEAE7;
+    --code-bg: #10151D;
+    --code-fg: #E4E9F0;
+    --code-comment: #7C8899;
+    --shadow: 0 1px 2px rgba(27,36,48,.06), 0 8px 24px -12px rgba(27,36,48,.12);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #12161C;
+      --surface: #1A212B;
+      --ink: #E7ECF1;
+      --ink-soft: #9FAAB6;
+      --ink-faint: #6B7684;
+      --line: #2A323C;
+      --accent: #6BA3E0;
+      --accent-ink: #BBDBFF;
+      --accent-soft: #1E2C3B;
+      --good: #5FBE8B;
+      --good-soft: #1B2C22;
+      --warn: #E0B357;
+      --warn-soft: #332911;
+      --bad: #E58579;
+      --bad-soft: #3A211F;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #12161C;
+    --surface: #1A212B;
+    --ink: #E7ECF1;
+    --ink-soft: #9FAAB6;
+    --ink-faint: #6B7684;
+    --line: #2A323C;
+    --accent: #6BA3E0;
+    --accent-ink: #BBDBFF;
+    --accent-soft: #1E2C3B;
+    --good: #5FBE8B;
+    --good-soft: #1B2C22;
+    --warn: #E0B357;
+    --warn-soft: #332911;
+    --bad: #E58579;
+    --bad-soft: #3A211F;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+    font-size: 16.5px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: "Archivo", "Segoe UI", sans-serif;
+    text-wrap: balance;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+
+  code, pre, .mono {
+    font-family: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+
+  a { color: var(--accent-ink); }
+
+  .shell {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+    padding: 40px 0 32px;
+  }
+  .eyebrow {
+    font-family: "Archivo", sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 22px;
+    height: 2px;
+    background: var(--accent);
+    display: inline-block;
+  }
+  .back-link {
+    font-family: "Archivo", sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--ink-soft);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .back-link:hover { color: var(--accent-ink); }
+  h1.title {
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 800;
+    margin: 14px 0 10px;
+    letter-spacing: -.01em;
+  }
+  .dek {
+    max-width: 62ch;
+    color: var(--ink-soft);
+    font-size: 17.5px;
+    margin: 0;
+  }
+  .header-meta {
+    margin-top: 22px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .meta-chip {
+    font-family: "Archivo", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    border: 1px solid var(--line);
+    border-radius: 99px;
+    padding: 5px 12px;
+    background: var(--paper);
+  }
+
+  /* ---------- Layout: nav rail + content ---------- */
+  main.layout {
+    display: grid;
+    grid-template-columns: 230px minmax(0,1fr);
+    gap: 44px;
+    padding: 40px 0 90px;
+    align-items: start;
+  }
+  @media (max-width: 860px) {
+    main.layout { grid-template-columns: 1fr; }
+  }
+
+  nav.toc {
+    position: sticky;
+    top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-family: "Archivo", sans-serif;
+  }
+  nav.toc .toc-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 8px;
+  }
+  nav.toc a {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    text-decoration: none;
+    padding: 7px 10px;
+    border-radius: 8px;
+    border-left: 2px solid transparent;
+  }
+  nav.toc a:hover { color: var(--accent-ink); background: var(--accent-soft); }
+
+  /* ---------- Sections ---------- */
+  section.topic {
+    scroll-margin-top: 24px;
+    padding-bottom: 46px;
+    margin-bottom: 46px;
+    border-bottom: 1px solid var(--line);
+  }
+  section.topic:last-child { border-bottom: none; }
+
+  .topic-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 6px; flex-wrap: wrap; }
+  .topic-num {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-faint);
+    flex: none;
+  }
+  h2.topic-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+  }
+  .due-chip {
+    font-family: "Archivo", sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--warn);
+    background: var(--warn-soft);
+    border-radius: 99px;
+    padding: 4px 10px;
+    margin-left: auto;
+  }
+  .topic-intro {
+    color: var(--ink-soft);
+    max-width: 68ch;
+    margin: 10px 0 22px;
+  }
+
+  h3.sub {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 26px 0 10px;
+    color: var(--ink);
+  }
+
+  p { max-width: 70ch; }
+  p.tight { margin: 8px 0; }
+
+  /* ---------- Enunciado list ---------- */
+  ol.enunciado {
+    margin: 0 0 22px;
+    padding-left: 22px;
+    max-width: 72ch;
+  }
+  ol.enunciado li { margin: 7px 0; color: var(--ink); }
+  ol.enunciado li::marker { font-family: "JetBrains Mono", monospace; color: var(--ink-faint); font-weight: 600; }
+
+  /* ---------- Code blocks ---------- */
+  .code-wrap { margin: 14px 0 18px; }
+  .code-label {
+    font-family: "Archivo", sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 6px;
+  }
+  pre.code {
+    background: var(--code-bg);
+    color: var(--code-fg);
+    border-radius: 10px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-size: 13.5px;
+    line-height: 1.6;
+    margin: 0;
+    box-shadow: var(--shadow);
+  }
+  pre.code .kw { color: #7FB0E8; font-weight: 600; }
+  pre.code .str { color: #C7D98E; }
+  pre.code .cm { color: var(--code-comment); font-style: italic; }
+  pre.code .fn { color: #E0A96D; }
+
+  /* ---------- Table (schema reference) ---------- */
+  .table-wrap { overflow-x: auto; margin: 10px 0 4px; -webkit-overflow-scrolling: touch; }
+  .kv-table { width: 100%; min-width: 480px; border-collapse: collapse; margin: 0; font-size: 14px; }
+  .kv-table th, .kv-table td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .kv-table th { font-family: "Archivo", sans-serif; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-faint); font-weight: 700; }
+  .kv-table td.mono { font-family: "JetBrains Mono", monospace; font-size: 13px; }
+
+  /* ---------- Gabarito toggle ---------- */
+  details.gabarito {
+    margin-top: 26px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  details.gabarito summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 14px 18px;
+    font-family: "Archivo", sans-serif;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--accent-ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    user-select: none;
+  }
+  details.gabarito summary::-webkit-details-marker { display: none; }
+  details.gabarito summary::before {
+    content: "▸";
+    display: inline-block;
+    transition: transform .15s ease;
+    font-size: 11px;
+  }
+  details.gabarito[open] summary::before { transform: rotate(90deg); }
+  details.gabarito summary:hover { background: var(--accent-soft); }
+  details.gabarito .gabarito-body {
+    padding: 4px 18px 20px;
+    border-top: 1px solid var(--line);
+  }
+  details.gabarito .gabarito-body .code-wrap:first-child { margin-top: 16px; }
+
+  .callout {
+    display: flex;
+    gap: 12px;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin: 16px 0;
+    font-size: 14.5px;
+    max-width: 70ch;
+  }
+  .callout .cicon { flex: none; font-family: "Archivo", sans-serif; font-weight: 800; font-size: 12px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; margin-top: 1px; }
+  .callout p { margin: 0; max-width: none; }
+  .callout p + p { margin-top: 6px; }
+  .callout.good { background: var(--good-soft); color: var(--ink); }
+  .callout.good .cicon { background: var(--good); color: var(--surface); }
+  .callout.warn { background: var(--warn-soft); color: var(--ink); }
+  .callout.warn .cicon { background: var(--warn); color: var(--surface); }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 26px 0 50px;
+    color: var(--ink-faint);
+    font-size: 13px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { scroll-behavior: auto !important; }
+  }
+  html { scroll-behavior: smooth; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="shell">
+    <a class="back-link" href="index.html">← Voltar pro guia</a>
+    <div class="eyebrow">Prática</div>
+    <h1 class="title">Exercícios resolvidos</h1>
+    <p class="dek">Enunciado original de cada exercício, com gabarito escondido — tenta resolver primeiro e só clica em "Ver gabarito" pra conferir depois.</p>
+    <div class="header-meta">
+      <span class="meta-chip">MySQL / MySQL Workbench</span>
+      <span class="meta-chip">2 exercícios</span>
+    </div>
+  </div>
+</header>
+
+<main class="layout shell">
+  <nav class="toc">
+    <div class="toc-label">Exercícios</div>
+    <a href="#exercicio6">Exercício 6 — filme / personagem</a>
+    <a href="#exercicio7">Exercício 7 — animal / animal_feroz</a>
+  </nav>
+
+  <div class="content">
+
+    <section class="topic" id="exercicio6">
+      <div class="topic-head">
+        <span class="topic-num">06</span>
+        <h2 class="topic-title">Filme / Personagem</h2>
+        <span class="due-chip">Entregue 06/09</span>
+      </div>
+      <p class="topic-intro">Views, agregações e a técnica de "achar quem não está em outra tabela sem usar a coluna óbvia no filtro".</p>
+
+      <div class="table-wrap"><table class="kv-table">
+        <tr><th>Tabela</th><th>Colunas</th></tr>
+        <tr><td class="mono">filme</td><td class="mono">id, titulo, tipo, diretor, ano_lancamento</td></tr>
+        <tr><td class="mono">personagem</td><td class="mono">id, nome, especie, nivel_importancia, id_filme</td></tr>
+      </table></div>
+
+      <ol class="enunciado">
+        <li>Criar as tabelas <code class="mono">filme</code> e <code class="mono">personagem</code></li>
+        <li>Inserir pelo menos 3 filmes e 10 personagens</li>
+        <li>Buscar o nome do filme e a quantidade de personagens</li>
+        <li>Buscar o nome do diretor e a quantidade de filmes dirigidos por ele</li>
+        <li>Buscar o nome, espécie e nível de importância de todos os personagens ordenando a lista pelo ano de lançamento do filme que participam e por ordem do mais importante para o menos importante</li>
+        <li>Buscar o título do filme e o nome dos personagens que o filme é de ação ou drama</li>
+        <li>Mostrar em uma única coluna o nome do diretor e dos personagens ordenado por ordem alfabética</li>
+        <li>Criar uma view chamada "view_filme" com as informações: título e tipo</li>
+        <li>Buscar na "view_filme" todas as informações ordenadas pelo título do filme</li>
+        <li>Criar uma view chamada "view_personagem" com as informações: nome, espécie e id do filme</li>
+        <li>Utilizando a "view_personagem" buscar o nome do personagem e o título do filme</li>
+        <li>Criar uma view chamada "view_filme_personagem" com as informações: título do filme, tipo, diretor, ano de lançamento e nome do personagem de todos os filmes que o ano de lançamento é par</li>
+        <li>Buscar o título de todos os filmes que o ano de lançamento não é par. Não pode utilizar no filtro da busca a coluna "ano_lancamento"</li>
+        <li>Buscar o título do filme, tipo, diretor, ano de lançamento e nome do personagem que não estão na "view_filme_personagem"</li>
+      </ol>
+
+      <details class="gabarito">
+        <summary>Ver gabarito</summary>
+        <div class="gabarito-body">
+          <p class="tight">Convenção: <code class="mono">nivel_importancia</code> — 1 é o <strong>mais</strong> importante, números maiores = menos importante. Dados de exemplo: 5 filmes conhecidos (Matrix, Toy Story, Titanic, Pantera Negra, Interestelar), com anos par e ímpar misturados de propósito pra testar os itens 12-14.</p>
+
+          <div class="code-wrap">
+            <pre class="code"><span class="kw">CREATE TABLE</span> filme (
+    id INT <span class="kw">AUTO_INCREMENT</span>,
+    titulo VARCHAR(100),
+    tipo VARCHAR(100),
+    diretor VARCHAR(100),
+    ano_lancamento INT,
+    <span class="kw">PRIMARY KEY</span>(id)
+);
+
+<span class="kw">CREATE TABLE</span> personagem (
+    id INT <span class="kw">AUTO_INCREMENT</span>,
+    nome VARCHAR(100),
+    especie VARCHAR(100),
+    nivel_importancia INT,
+    id_filme INT,
+    <span class="kw">PRIMARY KEY</span>(id),
+    <span class="kw">FOREIGN KEY</span>(id_filme) <span class="kw">REFERENCES</span> filme(id)
+);
+
+<span class="kw">INSERT INTO</span> filme (titulo, tipo, diretor, ano_lancamento) <span class="kw">VALUES</span>
+(<span class="str">'Matrix'</span>, <span class="str">'Ação'</span>, <span class="str">'Lana Wachowski'</span>, 1999),
+(<span class="str">'Toy Story'</span>, <span class="str">'Animação'</span>, <span class="str">'John Lasseter'</span>, 1995),
+(<span class="str">'Titanic'</span>, <span class="str">'Drama'</span>, <span class="str">'James Cameron'</span>, 1997),
+(<span class="str">'Pantera Negra'</span>, <span class="str">'Ação'</span>, <span class="str">'Ryan Coogler'</span>, 2018),
+(<span class="str">'Interestelar'</span>, <span class="str">'Ficção Científica'</span>, <span class="str">'Christopher Nolan'</span>, 2014);
+
+<span class="kw">INSERT INTO</span> personagem (nome, especie, nivel_importancia, id_filme) <span class="kw">VALUES</span>
+(<span class="str">'Neo'</span>, <span class="str">'Humano'</span>, 1, 1),
+(<span class="str">'Trinity'</span>, <span class="str">'Humana'</span>, 2, 1),
+(<span class="str">'Morpheus'</span>, <span class="str">'Humano'</span>, 2, 1),
+(<span class="str">'Woody'</span>, <span class="str">'Boneco de cowboy'</span>, 1, 2),
+(<span class="str">'Buzz Lightyear'</span>, <span class="str">'Boneco de astronauta'</span>, 1, 2),
+(<span class="str">'Rex'</span>, <span class="str">'Dinossauro de brinquedo'</span>, 3, 2),
+(<span class="str">'Jack Dawson'</span>, <span class="str">'Humano'</span>, 1, 3),
+(<span class="str">'Rose DeWitt Bukater'</span>, <span class="str">'Humana'</span>, 1, 3),
+(<span class="str">'T\'Challa'</span>, <span class="str">'Humano'</span>, 1, 4),
+(<span class="str">'Shuri'</span>, <span class="str">'Humana'</span>, 2, 4),
+(<span class="str">'Cooper'</span>, <span class="str">'Humano'</span>, 1, 5),
+(<span class="str">'TARS'</span>, <span class="str">'Robô'</span>, 3, 5);</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-label">3 — Filme e quantidade de personagens</div>
+            <pre class="code"><span class="kw">SELECT</span> f.titulo, <span class="kw">COUNT</span>(p.id) <span class="kw">AS</span> qtd_personagens
+<span class="kw">FROM</span> filme f
+<span class="kw">JOIN</span> personagem p <span class="kw">ON</span> p.id_filme = f.id
+<span class="kw">GROUP BY</span> f.id, f.titulo;</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-label">4 — Diretor e quantidade de filmes</div>
+            <pre class="code"><span class="kw">SELECT</span> diretor, <span class="kw">COUNT</span>(*) <span class="kw">AS</span> qtd_filmes
+<span class="kw">FROM</span> filme
+<span class="kw">GROUP BY</span> diretor;</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-label">5 — Ordenado por ano do filme e importância</div>
+            <pre class="code"><span class="kw">SELECT</span> p.nome, p.especie, p.nivel_importancia
+<span class="kw">FROM</span> personagem p
+<span class="kw">JOIN</span> filme f <span class="kw">ON</span> f.id = p.id_filme
+<span class="kw">ORDER BY</span> f.ano_lancamento <span class="kw">ASC</span>, p.nivel_importancia <span class="kw">ASC</span>;</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-label">6 — Filmes de ação ou drama</div>
+            <pre class="code"><span class="kw">SELECT</span> f.titulo, p.nome
+<span class="kw">FROM</span> filme f
+<span class="kw">JOIN</span> personagem p <span class="kw">ON</span> p.id_filme = f.id
+<span class="kw">WHERE</span> f.tipo <span class="kw">IN</span> (<span class="str">'Ação'</span>, <span class="str">'Drama'</span>);</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-label">7 — Diretor + personagens numa coluna só</div>
+            <pre class="code"><span class="kw">SELECT</span> diretor <span class="kw">AS</span> nome <span class="kw">FROM</span> filme
+<span class="kw">UNION</span>
+<span class="kw">SELECT</span> nome <span class="kw">FROM</span> personagem
+<span class="kw">ORDER BY</span> nome;</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-label">8-9 — view_filme</div>
+            <pre class="code"><span class="kw">CREATE VIEW</span> view_filme <span class="kw">AS</span>
+<span class="kw">SELECT</span> titulo, tipo <span class="kw">FROM</span> filme;
+
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> view_filme <span class="kw">ORDER BY</span> titulo;</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-label">10-11 — view_personagem</div>
+            <pre class="code"><span class="kw">CREATE VIEW</span> view_personagem <span class="kw">AS</span>
+<span class="kw">SELECT</span> nome, especie, id_filme <span class="kw">FROM</span> personagem;
+
+<span class="kw">SELECT</span> vp.nome, f.titulo
+<span class="kw">FROM</span> view_personagem vp
+<span class="kw">JOIN</span> filme f <span class="kw">ON</span> f.id = vp.id_filme;</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-label">12 — view_filme_personagem (só ano par)</div>
+            <pre class="code"><span class="kw">CREATE VIEW</span> view_filme_personagem <span class="kw">AS</span>
+<span class="kw">SELECT</span> f.titulo, f.tipo, f.diretor, f.ano_lancamento, p.nome <span class="kw">AS</span> nome_personagem
+<span class="kw">FROM</span> filme f
+<span class="kw">JOIN</span> personagem p <span class="kw">ON</span> p.id_filme = f.id
+<span class="kw">WHERE</span> f.ano_lancamento % 2 = 0;</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-label">13 — Filmes de ano ímpar, sem usar ano_lancamento no filtro</div>
+            <pre class="code"><span class="kw">SELECT DISTINCT</span> f.titulo
+<span class="kw">FROM</span> filme f
+<span class="kw">WHERE NOT EXISTS</span> (
+    <span class="kw">SELECT</span> 1 <span class="kw">FROM</span> view_filme_personagem vfp <span class="kw">WHERE</span> vfp.titulo = f.titulo
+);</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-label">14 — O que não está na view_filme_personagem</div>
+            <pre class="code"><span class="kw">SELECT</span> f.titulo, f.tipo, f.diretor, f.ano_lancamento, p.nome <span class="kw">AS</span> nome_personagem
+<span class="kw">FROM</span> filme f
+<span class="kw">JOIN</span> personagem p <span class="kw">ON</span> p.id_filme = f.id
+<span class="kw">WHERE NOT EXISTS</span> (
+    <span class="kw">SELECT</span> 1 <span class="kw">FROM</span> view_filme_personagem vfp
+    <span class="kw">WHERE</span> vfp.titulo = f.titulo <span class="kw">AND</span> vfp.nome_personagem = p.nome
+);</pre>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <section class="topic" id="exercicio7">
+      <div class="topic-head">
+        <span class="topic-num">07</span>
+        <h2 class="topic-title">Animal / Animal Feroz</h2>
+        <span class="due-chip">Entrega 13/09</span>
+      </div>
+      <p class="topic-intro">Triggers de BEFORE/AFTER pras três operações (INSERT, UPDATE, DELETE) e duas functions.</p>
+
+      <div class="table-wrap"><table class="kv-table">
+        <tr><th>Tabela</th><th>Colunas</th></tr>
+        <tr><td class="mono">animal</td><td class="mono">id, especie, nivel_feroz, herbivoro_carnivoro</td></tr>
+        <tr><td class="mono">animal_feroz</td><td class="mono">id, especie, herbivoro_carnivoro, registros</td></tr>
+      </table></div>
+
+      <ol class="enunciado">
+        <li>Criar as tabelas <code class="mono">animal</code> e <code class="mono">animal_feroz</code></li>
+        <li>Criar um trigger para antes de inserir um animal verificar se o nível_feroz está entre 1 e 5. Se sim ok, senão exibir mensagem erro</li>
+        <li>Criar um trigger para depois de inserir um animal verificar se o nível_feroz for 4 ou 5 deve cadastrar esse animal na tabela animal_feroz e atribuir 1 para registros</li>
+        <li>Criar 6 animais (5 com sucesso e 1 com nivel_feroz inválido)</li>
+        <li>Criar um trigger para antes de atualizar um animal verificar se está mudando a espécie. Se sim, não deixar atualizar</li>
+        <li>Atualizar um animal e mudar a espécie dele para "espécie inválida"</li>
+        <li>Criar um trigger para depois de atualizar um animal incrementar o valor de registros daquele animal se for feroz</li>
+        <li>Atualizar 1 animal feroz e atualizar 1 animal que não é feroz</li>
+        <li>Criar um trigger para antes de deletar um animal verificar se é herbívoro e não permitir</li>
+        <li>Apagar um animal herbívoro</li>
+        <li>Criar um trigger para depois de deletar um animal apagar ele da tabela animal_feroz</li>
+        <li>Apagar um animal que o nivel_feroz é 4 ou 5</li>
+        <li>Criar uma função que recebe como parâmetro a espécie do animal e retorna "Animal feroz!" ou "Animal não é muito feroz!" dependendo se ele existe ou não na tabela animal_feroz</li>
+        <li>Buscar todas as informações de todos os animais e também chamar a função para falar se é ou não feroz</li>
+        <li>Criar uma função que recebe como parâmetro a letra inicial de herbívoro ou carnívoro e retorna o texto "Herbívoro" ou "Carnívoro" conforme a entrada</li>
+        <li>Buscar a espécie e chamar a função que fala se é Herbívoro ou Carnívoro</li>
+      </ol>
+
+      <details class="gabarito">
+        <summary>Ver gabarito</summary>
+        <div class="gabarito-body">
+          <p class="tight">As duas tabelas não têm <code class="mono">FOREIGN KEY</code> entre si (não apareceu no diagrama da aula) — a ligação entre <code class="mono">animal</code> e <code class="mono">animal_feroz</code> é feita "na mão" pelos triggers, casando pelo nome da <code class="mono">especie</code>.</p>
+
+          <div class="code-wrap">
+            <div class="code-label">1 — Tabelas</div>
+            <pre class="code"><span class="kw">CREATE TABLE</span> animal (
+    id INT <span class="kw">AUTO_INCREMENT</span>,
+    especie VARCHAR(100),
+    nivel_feroz INT,
+    herbivoro_carnivoro VARCHAR(1),
+    <span class="kw">PRIMARY KEY</span>(id)
+);
+
+<span class="kw">CREATE TABLE</span> animal_feroz (
+    id INT <span class="kw">AUTO_INCREMENT</span>,
+    especie VARCHAR(100),
+    herbivoro_carnivoro VARCHAR(1),
+    registros INT,
+    <span class="kw">PRIMARY KEY</span>(id)
+);</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-label">2 — BEFORE INSERT: validar nível_feroz (1 a 5)</div>
+            <pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE TRIGGER</span> trigger_before_insert_animal
+<span class="kw">BEFORE INSERT ON</span> animal
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">IF</span> NEW.nivel_feroz &lt; 1 <span class="kw">OR</span> NEW.nivel_feroz &gt; 5 <span class="kw">THEN</span>
+        <span class="kw">SIGNAL SQLSTATE</span> <span class="str">'45000'</span>
+        <span class="kw">SET</span> MESSAGE_TEXT = <span class="str">'Nível de ferocidade deve estar entre 1 e 5'</span>;
+    <span class="kw">END IF</span>;
+<span class="kw">END</span> $$
+<span class="kw">DELIMITER</span> ;</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-label">3 — AFTER INSERT: cadastrar em animal_feroz se nível 4 ou 5</div>
+            <pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE TRIGGER</span> trigger_after_insert_animal
+<span class="kw">AFTER INSERT ON</span> animal
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">IF</span> NEW.nivel_feroz <span class="kw">IN</span> (4,5) <span class="kw">THEN</span>
+        <span class="kw">INSERT INTO</span> animal_feroz(especie, herbivoro_carnivoro, registros)
+        <span class="kw">VALUES</span> (NEW.especie, NEW.herbivoro_carnivoro, 1);
+    <span class="kw">END IF</span>;
+<span class="kw">END</span> $$
+<span class="kw">DELIMITER</span> ;</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-label">4 — 6 animais (5 ok + 1 inválido)</div>
+            <pre class="code"><span class="kw">INSERT INTO</span> animal(especie, nivel_feroz, herbivoro_carnivoro) <span class="kw">VALUES</span> (<span class="str">'Leão'</span>, 5, <span class="str">'C'</span>);
+<span class="kw">INSERT INTO</span> animal(especie, nivel_feroz, herbivoro_carnivoro) <span class="kw">VALUES</span> (<span class="str">'Coelho'</span>, 1, <span class="str">'H'</span>);
+<span class="kw">INSERT INTO</span> animal(especie, nivel_feroz, herbivoro_carnivoro) <span class="kw">VALUES</span> (<span class="str">'Lobo'</span>, 4, <span class="str">'C'</span>);
+<span class="kw">INSERT INTO</span> animal(especie, nivel_feroz, herbivoro_carnivoro) <span class="kw">VALUES</span> (<span class="str">'Cervo'</span>, 2, <span class="str">'H'</span>);
+<span class="kw">INSERT INTO</span> animal(especie, nivel_feroz, herbivoro_carnivoro) <span class="kw">VALUES</span> (<span class="str">'Crocodilo'</span>, 5, <span class="str">'C'</span>);
+
+<span class="cm">-- este deve falhar (nivel_feroz fora do intervalo 1-5)</span>
+<span class="kw">INSERT INTO</span> animal(especie, nivel_feroz, herbivoro_carnivoro) <span class="kw">VALUES</span> (<span class="str">'Hamster'</span>, 8, <span class="str">'H'</span>);
+<span class="cm">-- Error Code: 1644. Nível de ferocidade deve estar entre 1 e 5</span></pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-label">5 — BEFORE UPDATE: bloquear mudança de espécie</div>
+            <pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE TRIGGER</span> trigger_before_update_animal
+<span class="kw">BEFORE UPDATE ON</span> animal
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">IF</span> OLD.especie &lt;&gt; NEW.especie <span class="kw">THEN</span>
+        <span class="kw">SIGNAL SQLSTATE</span> <span class="str">'45000'</span>
+        <span class="kw">SET</span> MESSAGE_TEXT = <span class="str">'Não é permitido alterar a espécie do animal'</span>;
+    <span class="kw">END IF</span>;
+<span class="kw">END</span> $$
+<span class="kw">DELIMITER</span> ;</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-label">6 — Tentar mudar espécie (deve falhar)</div>
+            <pre class="code"><span class="kw">UPDATE</span> animal <span class="kw">SET</span> especie = <span class="str">'Espécie inválida'</span> <span class="kw">WHERE</span> especie = <span class="str">'Leão'</span>;
+<span class="cm">-- Error Code: 1644. Não é permitido alterar a espécie do animal</span></pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-label">7 — AFTER UPDATE: incrementar registros se for feroz</div>
+            <pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE TRIGGER</span> trigger_after_update_animal
+<span class="kw">AFTER UPDATE ON</span> animal
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">IF</span> NEW.nivel_feroz <span class="kw">IN</span> (4,5) <span class="kw">THEN</span>
+        <span class="kw">UPDATE</span> animal_feroz
+        <span class="kw">SET</span> registros = registros + 1
+        <span class="kw">WHERE</span> especie = NEW.especie;
+    <span class="kw">END IF</span>;
+<span class="kw">END</span> $$
+<span class="kw">DELIMITER</span> ;</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-label">8 — Atualizar 1 feroz e 1 não feroz</div>
+            <pre class="code"><span class="kw">UPDATE</span> animal <span class="kw">SET</span> nivel_feroz = 5 <span class="kw">WHERE</span> especie = <span class="str">'Lobo'</span>;    <span class="cm">-- feroz, incrementa registros</span>
+<span class="kw">UPDATE</span> animal <span class="kw">SET</span> nivel_feroz = 2 <span class="kw">WHERE</span> especie = <span class="str">'Coelho'</span>;  <span class="cm">-- não feroz, não mexe em animal_feroz</span></pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-label">9 — BEFORE DELETE: bloquear se for herbívoro</div>
+            <pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE TRIGGER</span> trigger_before_delete_animal
+<span class="kw">BEFORE DELETE ON</span> animal
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">IF</span> OLD.herbivoro_carnivoro = <span class="str">'H'</span> <span class="kw">THEN</span>
+        <span class="kw">SIGNAL SQLSTATE</span> <span class="str">'45000'</span>
+        <span class="kw">SET</span> MESSAGE_TEXT = <span class="str">'Não é permitido apagar um animal herbívoro'</span>;
+    <span class="kw">END IF</span>;
+<span class="kw">END</span> $$
+<span class="kw">DELIMITER</span> ;</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-label">10 — Apagar um herbívoro (deve falhar)</div>
+            <pre class="code"><span class="kw">DELETE FROM</span> animal <span class="kw">WHERE</span> especie = <span class="str">'Cervo'</span>;
+<span class="cm">-- Error Code: 1644. Não é permitido apagar um animal herbívoro</span></pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-label">11 — AFTER DELETE: apagar da animal_feroz também</div>
+            <pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE TRIGGER</span> trigger_after_delete_animal
+<span class="kw">AFTER DELETE ON</span> animal
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">DELETE FROM</span> animal_feroz <span class="kw">WHERE</span> especie = OLD.especie;
+<span class="kw">END</span> $$
+<span class="kw">DELIMITER</span> ;</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-label">12 — Apagar um carnívoro feroz (nível 4 ou 5)</div>
+            <pre class="code"><span class="kw">DELETE FROM</span> animal <span class="kw">WHERE</span> especie = <span class="str">'Crocodilo'</span>;
+<span class="cm">-- permitido (é carnívoro) — e o AFTER DELETE já remove ele de animal_feroz</span></pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-label">13 — Function: é feroz ou não?</div>
+            <pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE FUNCTION</span> verificar_animal_feroz(p_especie <span class="kw">VARCHAR</span>(100))
+<span class="kw">RETURNS VARCHAR</span>(100)
+<span class="kw">DETERMINISTIC</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">DECLARE</span> qtd INT;
+    <span class="kw">DECLARE</span> resultado <span class="kw">VARCHAR</span>(100);
+    <span class="kw">SET</span> qtd = (<span class="kw">SELECT COUNT</span>(*) <span class="kw">FROM</span> animal_feroz <span class="kw">WHERE</span> especie = p_especie);
+    <span class="kw">IF</span> qtd &gt; 0 <span class="kw">THEN</span>
+        <span class="kw">SET</span> resultado = <span class="str">'Animal feroz!'</span>;
+    <span class="kw">ELSE</span>
+        <span class="kw">SET</span> resultado = <span class="str">'Animal não é muito feroz!'</span>;
+    <span class="kw">END IF</span>;
+    <span class="kw">RETURN</span> resultado;
+<span class="kw">END</span> $$
+<span class="kw">DELIMITER</span> ;</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-label">14 — Todos os animais + classificação</div>
+            <pre class="code"><span class="kw">SELECT</span> *, verificar_animal_feroz(especie) <span class="kw">AS</span> classificacao
+<span class="kw">FROM</span> animal;</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-label">15 — Function: traduzir H/C</div>
+            <pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE FUNCTION</span> traduzir_tipo_animal(letra <span class="kw">VARCHAR</span>(1))
+<span class="kw">RETURNS VARCHAR</span>(20)
+<span class="kw">DETERMINISTIC</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">DECLARE</span> resultado <span class="kw">VARCHAR</span>(20);
+    <span class="kw">IF</span> letra = <span class="str">'H'</span> <span class="kw">THEN</span>
+        <span class="kw">SET</span> resultado = <span class="str">'Herbívoro'</span>;
+    <span class="kw">ELSEIF</span> letra = <span class="str">'C'</span> <span class="kw">THEN</span>
+        <span class="kw">SET</span> resultado = <span class="str">'Carnívoro'</span>;
+    <span class="kw">ELSE</span>
+        <span class="kw">SET</span> resultado = <span class="str">'Desconhecido'</span>;
+    <span class="kw">END IF</span>;
+    <span class="kw">RETURN</span> resultado;
+<span class="kw">END</span> $$
+<span class="kw">DELIMITER</span> ;</pre>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-label">16 — Espécie + tipo traduzido</div>
+            <pre class="code"><span class="kw">SELECT</span> especie, traduzir_tipo_animal(herbivoro_carnivoro) <span class="kw">AS</span> tipo
+<span class="kw">FROM</span> animal;</pre>
+          </div>
+
+          <div class="callout warn">
+            <span class="cicon">!</span>
+            <div>
+              <p><strong>Prazo:</strong> Turma A e Turma B — 13/09. Roda tudo no Workbench antes de entregar pra conferir os resultados de verdade.</p>
+            </div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+  </div>
+</main>
+
+<footer class="shell">
+  Gabaritos com dados de exemplo — os enunciados originais podem pedir outros nomes de tabela/coluna, confira com o professor se bate com o seu.
+</footer>
+
+</body>
+</html>
