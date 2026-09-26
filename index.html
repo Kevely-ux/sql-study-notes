@@ -316,6 +316,24 @@
     * { scroll-behavior: auto !important; }
   }
   html { scroll-behavior: smooth; }
+
+  .busca-box { display: flex; gap: 10px; align-items: center; margin: 14px 0 6px; max-width: 70ch; }
+  .busca-box input { flex: 1; min-width: 0; font: 500 16px "Archivo", sans-serif; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); }
+  .busca-box input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .busca-dicas { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px; }
+  .busca-dicas button { font: 600 12.5px "Archivo", sans-serif; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--accent-ink); cursor: pointer; }
+  .busca-dicas button:hover { background: var(--accent-soft); }
+  .busca-cont { font: 13px "Archivo", sans-serif; color: var(--ink-faint); margin: 10px 0; }
+  .recs { display: grid; gap: 4px; }
+  .layout > * { min-width: 0; }
+  .rec p code.mono { overflow-wrap: anywhere; }
+  .rec { padding: 14px 0 6px; border-top: 1px solid var(--line); }
+  .rec[hidden] { display: none; }
+  .rec-t { font: 700 16px "Archivo", sans-serif; margin: 0 0 4px; }
+  .rec-n { margin: 0 0 8px; font-size: 14.5px; max-width: 70ch; }
+  .rec .code-wrap { position: relative; margin: 8px 0 12px; }
+  .copiar { position: absolute; top: 8px; right: 8px; font: 600 11.5px "Archivo", sans-serif; padding: 4px 9px; border-radius: 6px; border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.1); color: var(--code-fg); cursor: pointer; }
+  .copiar:hover { background: rgba(255,255,255,.2); }
 </style>
 </head>
 <body>
@@ -338,6 +356,7 @@
 <main class="layout shell">
   <nav class="toc">
     <div class="toc-label">Neste guia</div>
+    <a href="#busca">Busca rápida</a>
     <a href="#criar-tabelas">1. Criar tabelas</a>
     <a href="#inserir-dados">2. Inserir dados</a>
     <a href="#consultar">3. Consultar (SELECT)</a>
@@ -356,6 +375,145 @@
   </nav>
 
   <div class="content">
+
+    <section class="topic" id="busca">
+      <div class="topic-head"><span class="topic-num">?</span><h2 class="topic-title">Busca rápida</h2></div>
+      <p class="topic-intro">Digite o que você quer fazer (ex.: <em>ranking</em>, <em>sem carro</em>, <em>média</em>, <em>duplicados</em>) e receba o comando pronto, com a explicação em uma linha. Os exemplos usam <code class="mono">pessoa</code> e <code class="mono">automovel</code>.</p>
+      <div class="busca-box"><input id="q" type="search" placeholder="Buscar: ranking, top 3, sem relação, média..." autocomplete="off" aria-label="Buscar receita de SQL"></div>
+      <div class="busca-dicas" id="dicas">
+        <button type="button">ranking</button><button type="button">contar</button><button type="button">sem</button>
+        <button type="button">média</button><button type="button">join</button><button type="button">trigger</button>
+        <button type="button">duplicados</button><button type="button">case</button>
+      </div>
+      <div class="busca-cont" id="cont"></div>
+      <div class="recs" id="recs">
+<article class="rec" data-k="Ranking: os N maiores (top 3) ranking top maiores melhores mais caros primeiros limit ordenar decrescente classificacao" data-pop="1"><h3 class="rec-t">Ranking: os N maiores (top 3)</h3><p class="rec-n"><code class="mono">ORDER BY ... DESC</code> põe o maior no topo e <code class="mono">LIMIT N</code> corta. Para os menores, troque por <code class="mono">ASC</code>.</p><div class="code-wrap"><pre class="code"><span class="kw">SELECT</span> modelo, preco
+<span class="kw">FROM</span> automovel
+<span class="kw">ORDER</span> <span class="kw">BY</span> preco <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> 3;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Ranking com posição (1º, 2º, 3º...) ranking posicao classificacao rank dense_rank row_number colocacao empate janela" data-pop="1"><h3 class="rec-t">Ranking com posição (1º, 2º, 3º...)</h3><p class="rec-n">MySQL 8+. <code class="mono">RANK()</code> repete a posição em empate e pula a seguinte (1,1,3). <code class="mono">DENSE_RANK()</code> não pula (1,1,2). <code class="mono">ROW_NUMBER()</code> numera sem empate.</p><div class="code-wrap"><pre class="code"><span class="kw">SELECT</span> modelo, preco,
+       RANK() <span class="kw">OVER</span> (<span class="kw">ORDER</span> <span class="kw">BY</span> preco <span class="kw">DESC</span>) <span class="kw">AS</span> posicao
+<span class="kw">FROM</span> automovel;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Ranking dentro de cada grupo ranking por grupo partition top por categoria cada pessoa cada tipo" data-pop="0"><h3 class="rec-t">Ranking dentro de cada grupo</h3><p class="rec-n"><code class="mono">PARTITION BY</code> reinicia o ranking a cada grupo. Aqui: o carro mais caro de cada pessoa é o de <code class="mono">posicao = 1</code>.</p><div class="code-wrap"><pre class="code"><span class="kw">SELECT</span> id_pessoa, modelo, preco,
+       RANK() <span class="kw">OVER</span> (<span class="kw">PARTITION</span> <span class="kw">BY</span> id_pessoa <span class="kw">ORDER</span> <span class="kw">BY</span> preco <span class="kw">DESC</span>) <span class="kw">AS</span> posicao
+<span class="kw">FROM</span> automovel;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Ranking de quem tem mais (contagem) ranking quantidade mais carros quem tem mais count ordenar grupo" data-pop="1"><h3 class="rec-t">Ranking de quem tem mais (contagem)</h3><p class="rec-n">Conte por grupo e ordene pelo apelido da contagem.</p><div class="code-wrap"><pre class="code"><span class="kw">SELECT</span> p.nome, COUNT(a.id) <span class="kw">AS</span> qtd
+<span class="kw">FROM</span> pessoa p
+<span class="kw">LEFT</span> <span class="kw">JOIN</span> automovel a <span class="kw">ON</span> a.id_pessoa = p.id
+<span class="kw">GROUP</span> <span class="kw">BY</span> p.id, p.nome
+<span class="kw">ORDER</span> <span class="kw">BY</span> qtd <span class="kw">DESC</span>;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Contar linhas contar count quantidade total linhas registros quantos" data-pop="0"><h3 class="rec-t">Contar linhas</h3><p class="rec-n"><code class="mono">COUNT(*)</code> conta linhas; <code class="mono">COUNT(coluna)</code> ignora os <code class="mono">NULL</code>.</p><div class="code-wrap"><pre class="code"><span class="kw">SELECT</span> COUNT(*) <span class="kw">AS</span> total <span class="kw">FROM</span> automovel;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Contar por grupo contar por grupo agrupar group by quantidade por" data-pop="1"><h3 class="rec-t">Contar por grupo</h3><p class="rec-n">Toda coluna do <code class="mono">SELECT</code> que não é função precisa estar no <code class="mono">GROUP BY</code>.</p><div class="code-wrap"><pre class="code"><span class="kw">SELECT</span> carro_moto, COUNT(*) <span class="kw">AS</span> qtd
+<span class="kw">FROM</span> automovel
+<span class="kw">GROUP</span> <span class="kw">BY</span> carro_moto;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Filtrar o resultado de um grupo having filtrar grupo agrupamento apenas com mais de erro 1111 1054 where" data-pop="0"><h3 class="rec-t">Filtrar o resultado de um grupo</h3><p class="rec-n"><code class="mono">WHERE</code> filtra linhas antes de agrupar; <code class="mono">HAVING</code> filtra os grupos depois. Função no <code class="mono">WHERE</code> dá erro 1111.</p><div class="code-wrap"><pre class="code"><span class="kw">SELECT</span> id_pessoa, COUNT(*) <span class="kw">AS</span> qtd
+<span class="kw">FROM</span> automovel
+<span class="kw">GROUP</span> <span class="kw">BY</span> id_pessoa
+<span class="kw">HAVING</span> COUNT(*) &gt;= 2;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Soma, média, maior e menor soma media maximo minimo sum avg max min total valor" data-pop="0"><h3 class="rec-t">Soma, média, maior e menor</h3><p class="rec-n">Funções de agregação: <code class="mono">SUM</code>, <code class="mono">AVG</code>, <code class="mono">MAX</code>, <code class="mono">MIN</code>.</p><div class="code-wrap"><pre class="code"><span class="kw">SELECT</span> SUM(preco) <span class="kw">AS</span> soma, AVG(preco) <span class="kw">AS</span> media,
+       MAX(preco) <span class="kw">AS</span> maior, MIN(preco) <span class="kw">AS</span> menor
+<span class="kw">FROM</span> automovel;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Linha inteira do maior (ou menor) valor maior menor mais caro mais barato linha inteira max subquery" data-pop="0"><h3 class="rec-t">Linha inteira do maior (ou menor) valor</h3><p class="rec-n">Duas formas: ordenar e pegar 1, ou filtrar pelo <code class="mono">MAX</code> numa subquery (esta traz todos os empatados).</p><div class="code-wrap"><pre class="code"><span class="kw">SELECT</span> * <span class="kw">FROM</span> automovel <span class="kw">ORDER</span> <span class="kw">BY</span> preco <span class="kw">DESC</span> <span class="kw">LIMIT</span> 1;
+
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> automovel
+<span class="kw">WHERE</span> preco = (<span class="kw">SELECT</span> MAX(preco) <span class="kw">FROM</span> automovel);</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Acima da média acima media maior que a media subquery filtro" data-pop="0"><h3 class="rec-t">Acima da média</h3><p class="rec-n">Subquery no <code class="mono">WHERE</code>. Não dá para usar <code class="mono">AVG()</code> direto no <code class="mono">WHERE</code>.</p><div class="code-wrap"><pre class="code"><span class="kw">SELECT</span> modelo, preco
+<span class="kw">FROM</span> automovel
+<span class="kw">WHERE</span> preco &gt; (<span class="kw">SELECT</span> AVG(preco) <span class="kw">FROM</span> automovel);</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Quem NÃO tem relação (sem carro) sem nao tem nenhum nao esta not exists left join is null quem nao ausente" data-pop="1"><h3 class="rec-t">Quem NÃO tem relação (sem carro)</h3><p class="rec-n"><code class="mono">LEFT JOIN</code> + <code class="mono">IS NULL</code> ou <code class="mono">NOT EXISTS</code>. Evite <code class="mono">NOT IN</code> se a lista puder ter <code class="mono">NULL</code>. Nunca use <code class="mono">= NULL</code>.</p><div class="code-wrap"><pre class="code"><span class="kw">SELECT</span> p.nome
+<span class="kw">FROM</span> pessoa p
+<span class="kw">LEFT</span> <span class="kw">JOIN</span> automovel a <span class="kw">ON</span> a.id_pessoa = p.id
+<span class="kw">WHERE</span> a.id <span class="kw">IS</span> <span class="kw">NULL</span>;
+
+<span class="kw">SELECT</span> nome <span class="kw">FROM</span> pessoa p
+<span class="kw">WHERE</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> (<span class="kw">SELECT</span> 1 <span class="kw">FROM</span> automovel a <span class="kw">WHERE</span> a.id_pessoa = p.id);</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Juntar duas tabelas (só os relacionados) join inner juntar relacionar duas tabelas fk chave estrangeira" data-pop="1"><h3 class="rec-t">Juntar duas tabelas (só os relacionados)</h3><p class="rec-n"><code class="mono">INNER JOIN</code> traz só quem tem par nas duas tabelas. Sem <code class="mono">ON</code> vira produto cartesiano.</p><div class="code-wrap"><pre class="code"><span class="kw">SELECT</span> p.nome, a.modelo
+<span class="kw">FROM</span> pessoa p
+<span class="kw">INNER</span> <span class="kw">JOIN</span> automovel a <span class="kw">ON</span> a.id_pessoa = p.id;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Todos de um lado, com ou sem par left join todos mesmo sem relacao aparecer null" data-pop="0"><h3 class="rec-t">Todos de um lado, com ou sem par</h3><p class="rec-n"><code class="mono">LEFT JOIN</code> mantém todas as linhas da tabela da esquerda; sem par, as colunas da direita vêm <code class="mono">NULL</code>.</p><div class="code-wrap"><pre class="code"><span class="kw">SELECT</span> p.nome, a.modelo
+<span class="kw">FROM</span> pessoa p
+<span class="kw">LEFT</span> <span class="kw">JOIN</span> automovel a <span class="kw">ON</span> a.id_pessoa = p.id;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="FULL JOIN (o MySQL não tem) full join outer completo simular todos dos dois lados union" data-pop="0"><h3 class="rec-t">FULL JOIN (o MySQL não tem)</h3><p class="rec-n">Simule com <code class="mono">LEFT JOIN</code> + <code class="mono">UNION</code> + <code class="mono">RIGHT JOIN</code>.</p><div class="code-wrap"><pre class="code"><span class="kw">SELECT</span> p.nome, a.modelo <span class="kw">FROM</span> pessoa p <span class="kw">LEFT</span> <span class="kw">JOIN</span> automovel a <span class="kw">ON</span> a.id_pessoa = p.id
+<span class="kw">UNION</span>
+<span class="kw">SELECT</span> p.nome, a.modelo <span class="kw">FROM</span> pessoa p <span class="kw">RIGHT</span> <span class="kw">JOIN</span> automovel a <span class="kw">ON</span> a.id_pessoa = p.id;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Se/senão numa coluna (CASE) case if else condicao sim nao traduzir s n converter rotulo" data-pop="1"><h3 class="rec-t">Se/senão numa coluna (CASE)</h3><p class="rec-n">Funciona como <code class="mono">if/else</code>. Dê nome com <code class="mono">AS</code>. Pode ter vários <code class="mono">WHEN</code> e aninhar <code class="mono">CASE</code>.</p><div class="code-wrap"><pre class="code"><span class="kw">SELECT</span> nome,
+  <span class="kw">CASE</span> <span class="kw">WHEN</span> cnh = <span class="str">'S'</span> <span class="kw">THEN</span> <span class="str">'Sim'</span> <span class="kw">ELSE</span> <span class="str">'Não'</span> <span class="kw">END</span> <span class="kw">AS</span> habilitado
+<span class="kw">FROM</span> pessoa;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Buscar texto que contém uma palavra like contem palavra texto parecido comeca termina buscar nome" data-pop="0"><h3 class="rec-t">Buscar texto que contém uma palavra</h3><p class="rec-n"><code class="mono">%</code> é o coringa: <code class="mono">'%de%'</code> contém, <code class="mono">'de%'</code> começa, <code class="mono">'%de'</code> termina.</p><div class="code-wrap"><pre class="code"><span class="kw">SELECT</span> id, nome <span class="kw">FROM</span> disciplina <span class="kw">WHERE</span> nome <span class="kw">LIKE</span> <span class="str">'%de%'</span>;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Par ou ímpar / múltiplo par impar multiplo resto divisao modulo mod" data-pop="0"><h3 class="rec-t">Par ou ímpar / múltiplo</h3><p class="rec-n"><code class="mono">valor % 2 = 0</code> é par; <code class="mono">% 3 = 0</code> é múltiplo de 3.</p><div class="code-wrap"><pre class="code"><span class="kw">SELECT</span> valor <span class="kw">FROM</span> numero <span class="kw">WHERE</span> valor % 2 = 0;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Achar duplicados duplicado repetido repetidos iguais mesmo nome mais de uma vez" data-pop="0"><h3 class="rec-t">Achar duplicados</h3><p class="rec-n">Agrupe pela coluna e filtre <code class="mono">HAVING COUNT(*) &gt; 1</code>.</p><div class="code-wrap"><pre class="code"><span class="kw">SELECT</span> nome, COUNT(*) <span class="kw">AS</span> vezes
+<span class="kw">FROM</span> pessoa
+<span class="kw">GROUP</span> <span class="kw">BY</span> nome
+<span class="kw">HAVING</span> COUNT(*) &gt; 1;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Remover repetidos do resultado distinct sem repeticao unicos valores diferentes" data-pop="0"><h3 class="rec-t">Remover repetidos do resultado</h3><p class="rec-n"><code class="mono">DISTINCT</code> tira linhas repetidas do resultado (não apaga nada da tabela).</p><div class="code-wrap"><pre class="code"><span class="kw">SELECT</span> <span class="kw">DISTINCT</span> profissao <span class="kw">FROM</span> pessoa;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Juntar, comuns ou diferença de duas consultas union union all intersect except empilhar juntar consultas comuns diferenca uma coluna" data-pop="0"><h3 class="rec-t">Juntar, comuns ou diferença de duas consultas</h3><p class="rec-n">Mesmo número de colunas. <code class="mono">UNION</code> sem repetidos, <code class="mono">UNION ALL</code> com repetidos, <code class="mono">INTERSECT</code> só os comuns, <code class="mono">EXCEPT</code> o que está só na 1ª.</p><div class="code-wrap"><pre class="code"><span class="kw">SELECT</span> nome <span class="kw">FROM</span> pai
+<span class="kw">UNION</span> <span class="kw">ALL</span>
+<span class="kw">SELECT</span> nome <span class="kw">FROM</span> filho
+<span class="kw">ORDER</span> <span class="kw">BY</span> nome;
+
+<span class="kw">SELECT</span> nome <span class="kw">FROM</span> pai <span class="kw">INTERSECT</span> <span class="kw">SELECT</span> nome <span class="kw">FROM</span> filho;
+<span class="kw">SELECT</span> nome <span class="kw">FROM</span> pai <span class="kw">EXCEPT</span> <span class="kw">SELECT</span> nome <span class="kw">FROM</span> filho;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Reaproveitar um resultado (WITH) with cte temporaria reaproveitar resultado consulta intermediaria apelido" data-pop="0"><h3 class="rec-t">Reaproveitar um resultado (WITH)</h3><p class="rec-n">O <code class="mono">WITH</code> cria uma tabela temporária com nome; filtre o apelido sem precisar de <code class="mono">HAVING</code>.</p><div class="code-wrap"><pre class="code"><span class="kw">WITH</span> info(id_pessoa, qtd) <span class="kw">AS</span> (
+  <span class="kw">SELECT</span> id_pessoa, COUNT(*) <span class="kw">FROM</span> automovel <span class="kw">GROUP</span> <span class="kw">BY</span> id_pessoa)
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> info <span class="kw">WHERE</span> qtd &gt;= 2;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Inserir a partir de um SELECT inserir insert select copiar dados outra tabela popular subquery" data-pop="0"><h3 class="rec-t">Inserir a partir de um SELECT</h3><p class="rec-n">Sem <code class="mono">VALUES</code>: o <code class="mono">SELECT</code> fornece as linhas.</p><div class="code-wrap"><pre class="code"><span class="kw">INSERT</span> <span class="kw">INTO</span> pessoa_automovel(nome, modelo, preco)
+<span class="kw">SELECT</span> p.nome, a.modelo, a.preco
+<span class="kw">FROM</span> pessoa p <span class="kw">JOIN</span> automovel a <span class="kw">ON</span> a.id_pessoa = p.id;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Atualizar/apagar sem acidente update delete where sem where seguro cuidado todas as linhas safe update 1175" data-pop="0"><h3 class="rec-t">Atualizar/apagar sem acidente</h3><p class="rec-n">Rode o <code class="mono">WHERE</code> num <code class="mono">SELECT</code> antes. Sem <code class="mono">WHERE</code>, todas as linhas mudam. O Workbench bloqueia com o erro 1175.</p><div class="code-wrap"><pre class="code"><span class="kw">SELECT</span> * <span class="kw">FROM</span> automovel <span class="kw">WHERE</span> id = 5;      <span class="cm">-- confira antes</span>
+<span class="kw">UPDATE</span> automovel <span class="kw">SET</span> preco = 50000 <span class="kw">WHERE</span> id = 5;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Criar uma view view visao esconder colunas consulta salva relatorio" data-pop="0"><h3 class="rec-t">Criar uma view</h3><p class="rec-n">View não guarda dados, só a consulta. Boa para dar acesso a poucas colunas.</p><div class="code-wrap"><pre class="code"><span class="kw">CREATE</span> <span class="kw">VIEW</span> view_aluno <span class="kw">AS</span>
+<span class="kw">SELECT</span> nome, ra <span class="kw">FROM</span> aluno <span class="kw">ORDER</span> <span class="kw">BY</span> nome;
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> view_aluno;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Criar índice e ver o ganho indice index otimizar busca rapida explain analyze performance" data-pop="0"><h3 class="rec-t">Criar índice e ver o ganho</h3><p class="rec-n">Índice acelera buscas na coluna; <code class="mono">EXPLAIN ANALYZE</code> mostra <code class="mono">Table scan</code> x <code class="mono">index scan</code> e o tempo.</p><div class="code-wrap"><pre class="code"><span class="kw">CREATE</span> <span class="kw">INDEX</span> idx_modelo <span class="kw">ON</span> automovel(modelo);
+<span class="kw">EXPLAIN</span> <span class="kw">ANALYZE</span> <span class="kw">SELECT</span> * <span class="kw">FROM</span> automovel <span class="kw">WHERE</span> modelo = <span class="str">'Civic'</span>;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Trigger que valida (BEFORE INSERT) trigger before insert validar bloquear nao deixar erro signal 1644 gatilho" data-pop="0"><h3 class="rec-t">Trigger que valida (BEFORE INSERT)</h3><p class="rec-n"><code class="mono">NEW</code> é a linha que vai entrar. <code class="mono">SIGNAL</code> cancela e mostra a mensagem (erro 1644).</p><div class="code-wrap"><pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE</span> <span class="kw">TRIGGER</span> trg_before_insert_salario
+<span class="kw">BEFORE</span> <span class="kw">INSERT</span> <span class="kw">ON</span> salario
+<span class="kw">FOR</span> <span class="kw">EACH</span> <span class="kw">ROW</span>
+<span class="kw">BEGIN</span>
+  <span class="kw">IF</span> NEW.remuneracao &lt; 0 <span class="kw">THEN</span>
+    <span class="kw">SIGNAL</span> <span class="kw">SQLSTATE</span> <span class="str">'45000'</span> <span class="kw">SET</span> MESSAGE_TEXT = <span class="str">'Remuneração deve ser positiva'</span>;
+  <span class="kw">END</span> <span class="kw">IF</span>;
+<span class="kw">END</span> $$
+<span class="kw">DELIMITER</span> ;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Trigger que grava log (AFTER) trigger after log historico auditoria registrar depois gatilho old new" data-pop="0"><h3 class="rec-t">Trigger que grava log (AFTER)</h3><p class="rec-n">No <code class="mono">UPDATE</code> use <code class="mono">OLD</code> (antes) e <code class="mono">NEW</code> (depois). Não mexa na própria tabela do trigger (erro 1442).</p><div class="code-wrap"><pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE</span> <span class="kw">TRIGGER</span> trg_after_update_salario
+<span class="kw">AFTER</span> <span class="kw">UPDATE</span> <span class="kw">ON</span> salario
+<span class="kw">FOR</span> <span class="kw">EACH</span> <span class="kw">ROW</span>
+<span class="kw">BEGIN</span>
+  <span class="kw">INSERT</span> <span class="kw">INTO</span> log_salario(id_salario, remuneracao_anterior, remuneracao_nova, datahora)
+  <span class="kw">VALUES</span> (NEW.id, OLD.remuneracao, NEW.remuneracao, CURRENT_TIMESTAMP());
+<span class="kw">END</span> $$
+<span class="kw">DELIMITER</span> ;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Criar uma function function funcao returns return criar propria retorna valor" data-pop="0"><h3 class="rec-t">Criar uma function</h3><p class="rec-n">Devolve um valor com <code class="mono">RETURN</code> e é chamada dentro do <code class="mono">SELECT</code>.</p><div class="code-wrap"><pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE</span> <span class="kw">FUNCTION</span> dobro(n INT)
+<span class="kw">RETURNS</span> INT
+<span class="kw">DETERMINISTIC</span>
+<span class="kw">BEGIN</span>
+  <span class="kw">RETURN</span> n * 2;
+<span class="kw">END</span>$$
+<span class="kw">DELIMITER</span> ;
+
+<span class="kw">SELECT</span> dobro(remuneracao) <span class="kw">FROM</span> salario;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Criar e chamar uma procedure procedure stored call in out inout parametro delimiter chamar" data-pop="0"><h3 class="rec-t">Criar e chamar uma procedure</h3><p class="rec-n"><code class="mono">CALL</code> executa. <code class="mono">OUT</code> devolve por variável <code class="mono">@x</code>. Sempre use <code class="mono">DELIMITER</code>.</p><div class="code-wrap"><pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE</span> <span class="kw">PROCEDURE</span> contar(<span class="kw">OUT</span> p_total INT)
+<span class="kw">BEGIN</span>
+  <span class="kw">SELECT</span> COUNT(*) <span class="kw">INTO</span> p_total <span class="kw">FROM</span> automovel;
+<span class="kw">END</span>$$
+<span class="kw">DELIMITER</span> ;
+
+<span class="kw">CALL</span> contar(@t);
+<span class="kw">SELECT</span> @t;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Lançar um erro próprio signal erro mensagem excecao 45000 message_text personalizado lancar" data-pop="0"><h3 class="rec-t">Lançar um erro próprio</h3><p class="rec-n">Em trigger ou procedure. Aparece como erro 1644 com o texto escolhido.</p><div class="code-wrap"><pre class="code"><span class="kw">SIGNAL</span> <span class="kw">SQLSTATE</span> <span class="str">'45000'</span> <span class="kw">SET</span> MESSAGE_TEXT = <span class="str">'Erro - Id não existe'</span>;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Paginação (pular linhas) paginacao limit offset pagina pular proximos" data-pop="0"><h3 class="rec-t">Paginação (pular linhas)</h3><p class="rec-n"><code class="mono">LIMIT tamanho OFFSET quantos_pular</code>. Página 2 de 10 em 10 = <code class="mono">OFFSET 10</code>.</p><div class="code-wrap"><pre class="code"><span class="kw">SELECT</span> * <span class="kw">FROM</span> pessoa <span class="kw">ORDER</span> <span class="kw">BY</span> id <span class="kw">LIMIT</span> 10 <span class="kw">OFFSET</span> 10;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+<article class="rec" data-k="Total por pessoa, do maior para o menor total por pessoa soma garagem mais cara ordenar valor agrupar join" data-pop="0"><h3 class="rec-t">Total por pessoa, do maior para o menor</h3><p class="rec-n">Junta, soma por grupo e ordena pelo apelido.</p><div class="code-wrap"><pre class="code"><span class="kw">SELECT</span> p.nome, SUM(a.preco) <span class="kw">AS</span> total
+<span class="kw">FROM</span> pessoa p
+<span class="kw">JOIN</span> automovel a <span class="kw">ON</span> a.id_pessoa = p.id
+<span class="kw">GROUP</span> <span class="kw">BY</span> p.id, p.nome
+<span class="kw">ORDER</span> <span class="kw">BY</span> total <span class="kw">DESC</span>;</pre><button type="button" class="copiar" aria-label="Copiar código">Copiar</button></div></article>
+      </div>
+    </section>
+
 
     <section class="topic" id="criar-tabelas">
       <div class="topic-head"><span class="topic-num">01</span><h2 class="topic-title">Criar tabelas</h2></div>
@@ -1247,6 +1405,39 @@
 <footer class="shell">
   Guia montado a partir dos exercícios com as tabelas <code class="mono">pessoa</code>, <code class="mono">automovel</code> e <code class="mono">pessoa_automovel</code>.
 </footer>
+
+
+<script>
+(function () {
+  function norm(s) { return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
+  var q = document.getElementById("q"), cont = document.getElementById("cont");
+  var recs = Array.prototype.slice.call(document.querySelectorAll("#recs .rec"));
+  recs.forEach(function (r) { r._k = norm(r.getAttribute("data-k") + " " + r.textContent); });
+  function filtrar() {
+    var termos = norm(q.value).split(/\s+/).filter(Boolean), n = 0;
+    recs.forEach(function (r) {
+      var ok = termos.length === 0 ? r.getAttribute("data-pop") === "1" : termos.every(function (t) { return r._k.indexOf(t) !== -1; });
+      r.hidden = !ok; if (ok) n++;
+    });
+    cont.textContent = termos.length === 0
+      ? "Mais usadas (" + n + "). Digite para buscar entre " + recs.length + " receitas."
+      : (n === 0 ? "Nada encontrado. Tente outra palavra (ex.: ranking, contar, sem, média)." : n + " resultado" + (n > 1 ? "s" : ""));
+  }
+  q.addEventListener("input", filtrar);
+  document.querySelectorAll("#dicas button").forEach(function (b) {
+    b.addEventListener("click", function () { q.value = b.textContent; filtrar(); q.focus(); });
+  });
+  document.querySelectorAll(".copiar").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var pre = b.parentNode.querySelector("pre"), txt = pre.textContent;
+      function ok() { b.textContent = "Copiado"; setTimeout(function () { b.textContent = "Copiar"; }, 1400); }
+      function sel() { var rg = document.createRange(); rg.selectNodeContents(pre); var s = getSelection(); s.removeAllRanges(); s.addRange(rg); b.textContent = "Selecionado"; }
+      try { navigator.clipboard.writeText(txt).then(ok, sel); } catch (e) { sel(); }
+    });
+  });
+  filtrar();
+})();
+</script>
 
 </body>
 </html>
