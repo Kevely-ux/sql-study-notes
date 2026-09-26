@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guia por aula — SQL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --paper: #F4F6F8;
+    --surface: #FFFFFF;
+    --ink: #1B2430;
+    --ink-soft: #55606C;
+    --ink-faint: #8793A0;
+    --line: #DCE3E9;
+    --accent: #2B6CB0;
+    --accent-ink: #1B4C82;
+    --accent-soft: #E7EEF6;
+    --good: #2F7D53;
+    --good-soft: #E6F4EC;
+    --warn: #966017;
+    --warn-soft: #FBF0DD;
+    --bad: #B23A2E;
+    --bad-soft: #FBEAE7;
+    --code-bg: #10151D;
+    --code-fg: #E4E9F0;
+    --code-comment: #7C8899;
+    --shadow: 0 1px 2px rgba(27,36,48,.06), 0 8px 24px -12px rgba(27,36,48,.12);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #12161C;
+      --surface: #1A212B;
+      --ink: #E7ECF1;
+      --ink-soft: #9FAAB6;
+      --ink-faint: #6B7684;
+      --line: #2A323C;
+      --accent: #6BA3E0;
+      --accent-ink: #BBDBFF;
+      --accent-soft: #1E2C3B;
+      --good: #5FBE8B;
+      --good-soft: #1B2C22;
+      --warn: #E0B357;
+      --warn-soft: #332911;
+      --bad: #E58579;
+      --bad-soft: #3A211F;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #12161C;
+    --surface: #1A212B;
+    --ink: #E7ECF1;
+    --ink-soft: #9FAAB6;
+    --ink-faint: #6B7684;
+    --line: #2A323C;
+    --accent: #6BA3E0;
+    --accent-ink: #BBDBFF;
+    --accent-soft: #1E2C3B;
+    --good: #5FBE8B;
+    --good-soft: #1B2C22;
+    --warn: #E0B357;
+    --warn-soft: #332911;
+    --bad: #E58579;
+    --bad-soft: #3A211F;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+    font-size: 16.5px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: "Archivo", "Segoe UI", sans-serif;
+    text-wrap: balance;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+
+  code, pre, .mono {
+    font-family: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+
+  a { color: var(--accent-ink); }
+
+  .shell {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+    padding: 40px 0 32px;
+  }
+  .eyebrow {
+    font-family: "Archivo", sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 22px;
+    height: 2px;
+    background: var(--accent);
+    display: inline-block;
+  }
+  .back-link {
+    font-family: "Archivo", sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--ink-soft);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .back-link:hover { color: var(--accent-ink); }
+  h1.title {
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 800;
+    margin: 14px 0 10px;
+    letter-spacing: -.01em;
+  }
+  .dek {
+    max-width: 62ch;
+    color: var(--ink-soft);
+    font-size: 17.5px;
+    margin: 0;
+  }
+  .header-meta {
+    margin-top: 22px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .meta-chip {
+    font-family: "Archivo", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    border: 1px solid var(--line);
+    border-radius: 99px;
+    padding: 5px 12px;
+    background: var(--paper);
+  }
+
+  /* ---------- Layout: nav rail + content ---------- */
+  main.layout {
+    display: grid;
+    grid-template-columns: 230px minmax(0,1fr);
+    gap: 44px;
+    padding: 40px 0 90px;
+    align-items: start;
+  }
+  @media (max-width: 860px) {
+    main.layout { grid-template-columns: 1fr; }
+  }
+
+  nav.toc {
+    position: sticky;
+    top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-family: "Archivo", sans-serif;
+  }
+  nav.toc .toc-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 8px;
+  }
+  nav.toc a {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    text-decoration: none;
+    padding: 7px 10px;
+    border-radius: 8px;
+    border-left: 2px solid transparent;
+  }
+  nav.toc a:hover { color: var(--accent-ink); background: var(--accent-soft); }
+
+  /* ---------- Sections ---------- */
+  section.topic {
+    scroll-margin-top: 24px;
+    padding-bottom: 46px;
+    margin-bottom: 46px;
+    border-bottom: 1px solid var(--line);
+  }
+  section.topic:last-child { border-bottom: none; }
+
+  .topic-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 6px; flex-wrap: wrap; }
+  .topic-num {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-faint);
+    flex: none;
+  }
+  h2.topic-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+  }
+  .due-chip {
+    font-family: "Archivo", sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--warn);
+    background: var(--warn-soft);
+    border-radius: 99px;
+    padding: 4px 10px;
+    margin-left: auto;
+  }
+  .topic-intro {
+    color: var(--ink-soft);
+    max-width: 68ch;
+    margin: 10px 0 22px;
+  }
+
+  h3.sub {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 26px 0 10px;
+    color: var(--ink);
+  }
+
+  p { max-width: 70ch; }
+  p.tight { margin: 8px 0; }
+
+  /* ---------- Enunciado list ---------- */
+  ol.enunciado {
+    margin: 0 0 22px;
+    padding-left: 22px;
+    max-width: 72ch;
+  }
+  ol.enunciado li { margin: 7px 0; color: var(--ink); }
+  ol.enunciado li::marker { font-family: "JetBrains Mono", monospace; color: var(--ink-faint); font-weight: 600; }
+
+  /* ---------- Code blocks ---------- */
+  .code-wrap { margin: 14px 0 18px; }
+  .code-label {
+    font-family: "Archivo", sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 6px;
+  }
+  pre.code {
+    background: var(--code-bg);
+    color: var(--code-fg);
+    border-radius: 10px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-size: 13.5px;
+    line-height: 1.6;
+    margin: 0;
+    box-shadow: var(--shadow);
+  }
+  pre.code .kw { color: #7FB0E8; font-weight: 600; }
+  pre.code .str { color: #C7D98E; }
+  pre.code .cm { color: var(--code-comment); font-style: italic; }
+  pre.code .fn { color: #E0A96D; }
+
+  /* ---------- Table (schema reference) ---------- */
+  .table-wrap { overflow-x: auto; margin: 10px 0 4px; -webkit-overflow-scrolling: touch; }
+  .kv-table { width: 100%; min-width: 480px; border-collapse: collapse; margin: 0; font-size: 14px; }
+  .kv-table th, .kv-table td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .kv-table th { font-family: "Archivo", sans-serif; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-faint); font-weight: 700; }
+  .kv-table td.mono { font-family: "JetBrains Mono", monospace; font-size: 13px; }
+
+  /* ---------- Gabarito toggle ---------- */
+  details.gabarito {
+    margin-top: 26px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  details.gabarito summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 14px 18px;
+    font-family: "Archivo", sans-serif;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--accent-ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    user-select: none;
+  }
+  details.gabarito summary::-webkit-details-marker { display: none; }
+  details.gabarito summary::before {
+    content: "▸";
+    display: inline-block;
+    transition: transform .15s ease;
+    font-size: 11px;
+  }
+  details.gabarito[open] summary::before { transform: rotate(90deg); }
+  details.gabarito summary:hover { background: var(--accent-soft); }
+  details.gabarito .gabarito-body {
+    padding: 4px 18px 20px;
+    border-top: 1px solid var(--line);
+  }
+  details.gabarito .gabarito-body .code-wrap:first-child { margin-top: 16px; }
+
+  .callout {
+    display: flex;
+    gap: 12px;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin: 16px 0;
+    font-size: 14.5px;
+    max-width: 70ch;
+  }
+  .callout .cicon { flex: none; font-family: "Archivo", sans-serif; font-weight: 800; font-size: 12px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; margin-top: 1px; }
+  .callout p { margin: 0; max-width: none; }
+  .callout p + p { margin-top: 6px; }
+  .callout.good { background: var(--good-soft); color: var(--ink); }
+  .callout.good .cicon { background: var(--good); color: var(--surface); }
+  .callout.warn { background: var(--warn-soft); color: var(--ink); }
+  .callout.warn .cicon { background: var(--warn); color: var(--surface); }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 26px 0 50px;
+    color: var(--ink-faint);
+    font-size: 13px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { scroll-behavior: auto !important; }
+  }
+  html { scroll-behavior: smooth; }
+
+  .passos { margin: 0; padding-left: 22px; display: grid; gap: 9px; font-size: 15px; }
+  .passos li::marker { font-family: "JetBrains Mono", monospace; color: var(--ink-faint); font-weight: 600; }
+  .passos .tag { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--accent-ink); background: var(--accent-soft); border-radius: 5px; padding: 1px 6px; margin-right: 4px; white-space: nowrap; }
+  .feito { display: flex; align-items: center; gap: 8px; margin: 14px 0 0; font-family: "Archivo", sans-serif; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+  .feito input { width: 18px; height: 18px; accent-color: var(--accent); }
+  .prog { font-family: "Archivo", sans-serif; font-size: 13px; color: var(--ink-faint); margin-top: 12px; }
+  ul.pts { margin: 8px 0; padding-left: 20px; max-width: 70ch; }
+  ul.pts li { margin: 5px 0; }
+  .aula-data { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--ink-faint); margin: -6px 0 10px; }
+  .exbox { margin-top: 22px; padding-top: 6px; border-top: 1px dashed var(--line); }
+  .exbox h3.sub { margin-top: 18px; }
+  .layout > * { min-width: 0; }
+  p code.mono, li code.mono, td code.mono { overflow-wrap: anywhere; }
+  .table-wrap, pre.code { max-width: 100%; overflow-x: auto; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="shell">
+    <a class="back-link" href="index.html">← Voltar pro guia</a>
+    <div class="eyebrow">Estudo</div>
+    <h1 class="title">Guia por aula</h1>
+    <p class="dek">O que cada slide ensinou, organizado por aula. Para cada exercício há um "Como resolver" com dicas: onde procurar e o que testar. A resposta você escreve e roda no Workbench.</p>
+    <div class="header-meta">
+      <span class="meta-chip">MySQL / MySQL Workbench</span>
+      <span class="meta-chip">Aulas 01 a 07</span>
+      <span class="meta-chip">8 exercícios</span>
+    </div>
+    <div class="prog" id="prog">0 de 8 exercícios feitos</div>
+  </div>
+</header>
+
+<main class="layout shell">
+  <nav class="toc">
+    <div class="toc-label">Aulas</div>
+    <a href="#aula01">Aula 01 — Apresentação e revisão</a>
+    <a href="#aula02">Aula 02 — Combinar, CASE, HAVING, WITH</a>
+    <a href="#aula03">Aula 03 — Subquery e índice</a>
+    <a href="#aula04">Aula 04 — View</a>
+    <a href="#aula05">Aula 05 — Trigger e function</a>
+    <a href="#aula06">Aula 06 — Stored procedure</a>
+    <a href="#aula07">Aula 07 — Revisão e avaliação</a>
+  </nav>
+
+  <div class="content">
+
+    <section class="topic" id="aula01">
+      <div class="topic-head"><span class="topic-num">01</span><h2 class="topic-title">Apresentação e revisão</h2></div>
+      <div class="aula-data">03/08 - 04/08/2026</div>
+      <p class="topic-intro">Combinados da disciplina, calendário e a base que vem do semestre anterior. Os slides da revisão só listam os tópicos, então a lista abaixo serve de roteiro de autoestudo.</p>
+      <ul class="pts"><li><strong>Dinâmica:</strong> explicação (teórica, prática e com participação) e no mínimo 1 exercício por aula. Exercício de hoje vence às 23:59 do 2º domingo.</li><li><strong>Nota de cada bimestre:</strong> Avaliação (0-5) + Atividades (0-2) + APEX (0-1) + Avaliação Integrativa (0-2). A substitutiva (0-10) troca a menor nota de bimestre.</li><li><strong>Ferramentas:</strong> MySQL Server + MySQL Workbench, MongoDB + Compass (NoSQL, no 2º bimestre), Visual Paradigm / Draw.io para modelagem.</li><li><strong>Revisão que precisa estar na ponta da língua:</strong> análise de requisitos, modelo conceitual (MER/DER), modelo lógico, normalização e modelo físico.</li></ul><div class="table-wrap"><table class="kv-table"><tr><th>Aula</th><th>Datas</th><th>Assunto</th></tr><tr><td>01-01</td><td>03/08 - 04/08</td><td>Apresentação + revisão</td></tr><tr><td>02-02</td><td>10/08 - 11/08</td><td>Intersect, except, case, having, with</td></tr><tr><td>03-03</td><td>17/08 - 18/08</td><td>Subquery + índice</td></tr><tr><td>04-04</td><td>24/08 - 25/08</td><td>View</td></tr><tr><td>05-05</td><td>31/08 - 01/09</td><td>Trigger + function</td></tr><tr><td>06-06</td><td>08/09 e 14/09</td><td>Stored procedure</td></tr><tr><td>07-08</td><td>21/09 - 22/09</td><td>Revisão + APEX 1º bimestre</td></tr><tr><td>08-09</td><td>28/09 - 29/09</td><td><strong>Avaliação do 1º bimestre</strong></td></tr><tr><td>09-10</td><td>05/10 - 06/10</td><td>Devolutiva + transação, concorrência e controle</td></tr><tr><td>10 a 11</td><td>19/10 - 27/10</td><td>NoSQL (MongoDB)</td></tr></table></div>
+      <div class="exbox">
+        <h3 class="sub">Exercício 1 — modelos do e-commerce <span class="due-chip">Turma A e B: 16/08</span></h3>
+        
+        <ol class="enunciado"><li>A partir do texto crie o modelo conceitual, o modelo lógico e o modelo lógico normalizado.</li><li>Texto: cada cliente (nome, e-mail, senha, endereço de entrega) pode fazer compras de vários produtos. Cada produto pertence a uma categoria (nome e descrição) e tem nome, preço e descrição.</li><li>Entregar os diagramas em PDF ou JPG.</li></ol>
+        <details class="gabarito">
+          <summary>Como resolver (dicas, sem a resposta pronta)</summary>
+          <div class="gabarito-body">
+            <p class="tight">Tente primeiro no MySQL Workbench. Cada dica diz <strong>onde procurar</strong> e <strong>o que conferir</strong>; o código mesmo você escreve e testa.</p>
+            <ol class="passos"><li><strong>Substantivos = entidades.</strong> Sublinhe no texto: cliente, produto, categoria e compra. Tudo que só descreve alguém (nome, e-mail, preço) vira atributo.</li><li><strong>Verbos = relacionamentos.</strong> Leia "cliente faz compras de produtos" e pergunte dos dois lados: um cliente faz quantas compras? uma compra tem quantos produtos? um produto aparece em quantas compras?</li><li><strong>Categoria é 1:N com produto</strong> (um produto pertence a uma categoria; uma categoria tem vários produtos).</li><li><strong>Lógico:</strong> toda relação 1:N gera uma FK do lado N; uma relação N:N gera uma tabela nova com as duas chaves. Descubra qual das relações acima é N:N.</li><li><strong>Normalizado:</strong> confira se o endereço de entrega e o preço aparecem repetidos onde não deveriam. Pergunte: o preço do produto hoje muda o valor de compras antigas?</li><li><strong>Teste:</strong> para cada linha do diagrama consiga apontar a coluna FK que a representa.</li></ol>
+          </div>
+        </details>
+        <label class="feito"><input type="checkbox" data-ex="ex1"> Resolvi e testei este exercício</label>
+      </div>
+      <div class="exbox">
+        <h3 class="sub">Exercício 2 — a tabela produto está na 3FN? <span class="due-chip">Turma A e B: 16/08</span></h3>
+        
+        <ol class="enunciado"><li>Tabela <code class="mono">produto</code>: id (PK), nome, categoria, preco_compra, preco_venda, lucro, fornecedor, cidade_fornecedor.</li><li>Responda se está na 3FN; se não, justifique e altere para atender a 3FN.</li><li>Entregar PDF ou JPG da normalização.</li></ol>
+        <details class="gabarito">
+          <summary>Como resolver (dicas, sem a resposta pronta)</summary>
+          <div class="gabarito-body">
+            <p class="tight">Tente primeiro no MySQL Workbench. Cada dica diz <strong>onde procurar</strong> e <strong>o que conferir</strong>; o código mesmo você escreve e testa.</p>
+            <ol class="passos"><li><strong>Regra da 3FN:</strong> cada coluna não-chave deve depender só da chave, e não de outra coluna não-chave.</li><li>Pergunte de cada coluna: dá para calcular a partir de outras? (olhe <code class="mono">lucro</code>).</li><li>Pergunte: quem determina <code class="mono">cidade_fornecedor</code>, o produto ou o fornecedor? Isso é uma dependência transitiva.</li><li>Pergunte: a <code class="mono">categoria</code> repete texto em vários produtos? Vale uma tabela própria?</li><li><strong>Justifique</strong> citando o nome da coluna e a coluna da qual ela depende, e desenhe a nova estrutura com PK e FK.</li></ol>
+          </div>
+        </details>
+        <label class="feito"><input type="checkbox" data-ex="ex2"> Resolvi e testei este exercício</label>
+      </div>
+      <div class="exbox">
+        <h3 class="sub">Exercício 3 — aluno, disciplina e aluno_disciplina <span class="due-chip">Turma A e B: 16/08</span></h3>
+        
+        <ol class="enunciado"><li>Tabelas: <code class="mono">aluno</code> (id, nome VARCHAR(250), data_nascimento DATE, sexo VARCHAR(1), formado VARCHAR(1)), <code class="mono">disciplina</code> (id, nome VARCHAR(50), semestre INT) e <code class="mono">aluno_disciplina</code> (id_aluno, id_disciplina).</li><li>1) criar as tabelas; 2) mín. 3 alunos, 5 disciplinas e 9 registros em aluno_disciplina; 3) todos os alunos; 4) alunos do sexo M; 5) nome e formado das alunas F; 6) mudar o nome do aluno de id 3 para "Nome alterado".</li><li>7) novo aluno sem disciplina; 8) nome do aluno e da disciplina só dos relacionados; 9) todos os alunos (id, nome, nascimento) e, se houver, id e nome da disciplina.</li><li>10) nova disciplina sem aluno; 11) todos os registros de aluno e de disciplina, relacionados ou não; 12) disciplinas de semestre ímpar; 13) id e nome das disciplinas cujo nome tem "de"; 14) alunos que cursam disciplina do 1º, 3º, 5º ou 7º semestre.</li><li>Entregar o arquivo .sql.</li></ol>
+        <details class="gabarito">
+          <summary>Como resolver (dicas, sem a resposta pronta)</summary>
+          <div class="gabarito-body">
+            <p class="tight">Tente primeiro no MySQL Workbench. Cada dica diz <strong>onde procurar</strong> e <strong>o que conferir</strong>; o código mesmo você escreve e testa.</p>
+            <ol class="passos"><li><strong>1-2:</strong> crie primeiro <code class="mono">aluno</code> e <code class="mono">disciplina</code>; a <code class="mono">aluno_disciplina</code> tem <strong>duas FKs</strong> e pode ter PK composta. Insira os pais antes dos filhos (senão erro 1452).</li><li><strong>3-5 e 12-13:</strong> <code class="mono">SELECT</code> com <code class="mono">WHERE</code>. Para "contém a palavra" procure <code class="mono">LIKE</code> e o coringa <code class="mono">%</code>. Para semestre ímpar use o resto da divisão (aula 02, slide do <code class="mono">%</code>).</li><li><strong>6:</strong> <code class="mono">UPDATE ... SET ... WHERE id = 3</code>. Antes de rodar, faça o mesmo <code class="mono">WHERE</code> em um <code class="mono">SELECT</code> para ver o que será afetado.</li><li><strong>8:</strong> só os relacionados = <code class="mono">INNER JOIN</code> passando pela tabela do meio.</li><li><strong>9:</strong> todos os alunos, mesmo sem disciplina = <code class="mono">LEFT JOIN</code>. <strong>Confira:</strong> o aluno do item 7 deve aparecer com disciplina vazia (<code class="mono">NULL</code>).</li><li><strong>11:</strong> todos de ambos os lados = simule o <code class="mono">FULL JOIN</code> (o slide da aula 02 diz com qual comando).</li><li><strong>14:</strong> <code class="mono">IN (1,3,5,7)</code> sobre o semestre e um <code class="mono">JOIN</code>. Cuidado com aluno repetido: talvez precise de <code class="mono">DISTINCT</code>.</li></ol>
+          </div>
+        </details>
+        <label class="feito"><input type="checkbox" data-ex="ex3"> Resolvi e testei este exercício</label>
+      </div>
+    </section>
+
+    <section class="topic" id="aula02">
+      <div class="topic-head"><span class="topic-num">02</span><h2 class="topic-title">UNION, INTERSECT, EXCEPT, CASE, HAVING e WITH</h2></div>
+      <div class="aula-data">10/08 - 11/08/2026</div>
+      <p class="topic-intro">Como combinar consultas, criar colunas calculadas com condição, filtrar grupos e reaproveitar o resultado de uma busca.</p>
+      <h3 class="sub">Query</h3><ul class="pts"><li>Cada comando SQL é <strong>individual</strong>: <code class="mono">SELECT</code> busca em 1 ou + tabelas e exibe, <code class="mono">INSERT</code>, <code class="mono">UPDATE</code> e <code class="mono">DELETE</code> mexem em 1 tabela e acabam ali.</li><li>Para combinar comandos existem <code class="mono">UNION</code>, <code class="mono">INTERSECT</code> e <code class="mono">EXCEPT</code>.</li></ul><h3 class="sub">UNION, INTERSECT, EXCEPT</h3><ul class="pts"><li>Forma geral: <code class="mono">&lt;SELECT&gt; UNION ou INTERSECT ou EXCEPT &lt;SELECT&gt;</code>. Os dois <code class="mono">SELECT</code> têm o mesmo número de colunas.</li><li><code class="mono">UNION</code>: junta tudo e <strong>ignora repetidos</strong> (usado para simular o <code class="mono">FULL JOIN</code>). <code class="mono">UNION ALL</code>: junta tudo, <strong>com repetidos</strong>.</li><li><code class="mono">INTERSECT</code>: valores comuns aos dois. <code class="mono">EXCEPT</code>: o que está no 1º e não está no 2º.</li></ul><div class="code-wrap"><div class="code-label">Slides: tabelas numero (1 a 10) e numero_par (2 a 10)</div><pre class="code"><span class="kw">SELECT</span> valor <span class="kw">FROM</span> numero
+<span class="kw">UNION</span>
+<span class="kw">SELECT</span> valor <span class="kw">FROM</span> numero_par;      <span class="cm">-- 1..10 sem repetir</span>
+
+<span class="kw">SELECT</span> valor <span class="kw">FROM</span> numero
+<span class="kw">UNION</span> <span class="kw">ALL</span>
+<span class="kw">SELECT</span> valor <span class="kw">FROM</span> numero_par;      <span class="cm">-- 15 linhas (2,4,6,8,10 repetem)</span>
+
+<span class="kw">SELECT</span> valor <span class="kw">FROM</span> numero
+<span class="kw">INTERSECT</span>
+<span class="kw">SELECT</span> valor <span class="kw">FROM</span> numero_par;      <span class="cm">-- 2,4,6,8,10</span>
+
+<span class="kw">SELECT</span> valor <span class="kw">FROM</span> numero
+<span class="kw">EXCEPT</span>
+<span class="kw">SELECT</span> valor <span class="kw">FROM</span> numero_par;      <span class="cm">-- 1,3,5,7,9</span></pre></div><h3 class="sub">CASE</h3><ul class="pts"><li>Funciona como o <code class="mono">if/else</code> ou <code class="mono">switch</code> de programação: <code class="mono">CASE WHEN &lt;condição&gt; THEN &lt;resultado&gt; ... ELSE &lt;resultado&gt; END</code>.</li><li>Dê nome à coluna com <code class="mono">END AS 'nome'</code>. O <code class="mono">WHEN</code> é avaliado de cima para baixo e vale o primeiro que for verdadeiro.</li><li>Dá para <strong>aninhar</strong>: <code class="mono">ELSE CASE WHEN ... END</code>.</li></ul><div class="code-wrap"><pre class="code"><span class="kw">SELECT</span> valor,
+  <span class="kw">CASE</span>
+    <span class="kw">WHEN</span> valor % 5 = 0 <span class="kw">THEN</span> <span class="str">'Múltiplo de 5'</span>
+    <span class="kw">WHEN</span> valor % 3 = 0 <span class="kw">THEN</span> <span class="str">'Múltiplo de 3'</span>
+    <span class="kw">WHEN</span> valor % 2 = 0 <span class="kw">THEN</span> <span class="str">'Par'</span>
+    <span class="kw">ELSE</span> <span class="str">'Ímpar'</span>
+  <span class="kw">END</span> <span class="kw">AS</span> <span class="str">'Análise'</span>
+<span class="kw">FROM</span> numero;
+
+<span class="cm">-- aninhado: primeiro par/ímpar, depois só o ímpar é analisado</span>
+<span class="kw">SELECT</span> valor,
+  <span class="kw">CASE</span>
+    <span class="kw">WHEN</span> valor % 2 = 0 <span class="kw">THEN</span> <span class="str">'Par'</span>
+    <span class="kw">ELSE</span> <span class="kw">CASE</span>
+      <span class="kw">WHEN</span> valor % 5 = 0 <span class="kw">THEN</span> <span class="str">'Múltiplo de 5'</span>
+      <span class="kw">WHEN</span> valor % 3 = 0 <span class="kw">THEN</span> <span class="str">'Múltiplo de 3'</span>
+      <span class="kw">ELSE</span> <span class="str">'Ímpar'</span>
+    <span class="kw">END</span>
+  <span class="kw">END</span> <span class="kw">AS</span> <span class="str">'Análise'</span>
+<span class="kw">FROM</span> numero;</pre></div><h3 class="sub">GROUP BY, HAVING e ORDER BY</h3><ul class="pts"><li><code class="mono">GROUP BY</code> agrupa o resultado e precisa de uma função de agregação: <code class="mono">COUNT</code>, <code class="mono">SUM</code>, <code class="mono">AVG</code>, <code class="mono">MAX</code>, <code class="mono">MIN</code>.</li><li><code class="mono">ORDER BY qtd DESC</code> ordena pelo apelido, do maior para o menor.</li><li>Filtrar o resultado do grupo com <code class="mono">WHERE</code> <strong>não funciona</strong>: com o apelido dá <strong>erro 1054</strong> (Unknown column) e com a função direta dá <strong>erro 1111</strong> (Invalid use of group function).</li><li><code class="mono">HAVING</code> é o <code class="mono">WHERE</code> dos agrupamentos. Pode existir <code class="mono">WHERE</code> e <code class="mono">HAVING</code> na mesma consulta.</li></ul><div class="code-wrap"><div class="code-label">Tabela exercicio (numero, id_aluno, nota)</div><pre class="code"><span class="kw">SELECT</span> numero, COUNT(numero) <span class="kw">AS</span> qtd, AVG(nota) <span class="kw">AS</span> media
+<span class="kw">FROM</span> exercicio
+<span class="kw">GROUP</span> <span class="kw">BY</span> numero
+<span class="kw">HAVING</span> media &gt; 6
+<span class="kw">ORDER</span> <span class="kw">BY</span> qtd <span class="kw">DESC</span>;</pre></div><h3 class="sub">WITH (CTE)</h3><ul class="pts"><li>O resultado de uma busca é usado por outro comando. Funciona como uma tabela temporária com nome: <code class="mono">WITH nome(colunas) AS (SELECT ...)</code>.</li><li>Serve para o <code class="mono">SELECT</code>, mas também para <strong>INSERT, UPDATE e DELETE</strong>.</li></ul><div class="code-wrap"><pre class="code"><span class="kw">WITH</span> info_temp(numero, quantidade, media) <span class="kw">AS</span> (
+  <span class="kw">SELECT</span> numero, COUNT(numero), AVG(nota) <span class="kw">FROM</span> exercicio <span class="kw">GROUP</span> <span class="kw">BY</span> numero)
+<span class="kw">SELECT</span> numero, quantidade, media
+<span class="kw">FROM</span> info_temp
+<span class="kw">WHERE</span> media &gt; 6
+<span class="kw">ORDER</span> <span class="kw">BY</span> quantidade <span class="kw">DESC</span>;
+
+<span class="cm">-- WITH dentro do INSERT</span>
+<span class="kw">INSERT</span> <span class="kw">INTO</span> calculado(exercicio, quantidade, media)
+<span class="kw">WITH</span> info_temp(numero, quantidade, media) <span class="kw">AS</span> (
+  <span class="kw">SELECT</span> numero, COUNT(numero), AVG(nota) <span class="kw">FROM</span> exercicio <span class="kw">GROUP</span> <span class="kw">BY</span> numero)
+<span class="kw">SELECT</span> numero, quantidade, media <span class="kw">FROM</span> info_temp <span class="kw">WHERE</span> media &gt; 6;
+
+<span class="cm">-- WITH antes do UPDATE (com JOIN) e do DELETE</span>
+<span class="kw">WITH</span> info_temp(numero, quantidade, media) <span class="kw">AS</span> (
+  <span class="kw">SELECT</span> numero, COUNT(numero), AVG(nota) <span class="kw">FROM</span> exercicio <span class="kw">GROUP</span> <span class="kw">BY</span> numero)
+<span class="kw">UPDATE</span> calculado
+<span class="kw">INNER</span> <span class="kw">JOIN</span> info_temp <span class="kw">ON</span> info_temp.numero = calculado.exercicio
+<span class="kw">SET</span> calculado.quantidade = info_temp.quantidade, calculado.media = info_temp.media;</pre></div>
+      <div class="exbox">
+        <h3 class="sub">Exercício 4 — pai e filho <span class="due-chip">Turma A e B: 23/08</span></h3>
+        
+        <ol class="enunciado"><li>Tabelas: <code class="mono">pai</code> (id, nome VARCHAR(100)) e <code class="mono">filho</code> (id, nome VARCHAR(100), id_pai). Relação 1:N.</li><li>1) criar as tabelas; 2) mín. 5 registros em cada, com nomes iguais e diferentes; 3) nome do pai e nome do filho em 2 colunas; 4) em 1 coluna só, o nome de todos os pais e filhos em ordem ascendente; 5) o mesmo sem duplicidade.</li><li>6) nomes comuns entre pais e filhos; 7) nomes de pais que não são nome de algum filho; 8) todos os nomes de pais e filhos, mas o nome do pai não pode ser de algum filho e vice-versa.</li><li>9) nome do pai e quantidade de filhos; 10) nome e quantidade de pessoas (pais + filhos) com esse nome; 11) pai com 2 ou mais filhos; 12) repetir o 11 com <code class="mono">WITH</code>.</li><li>13) criar a tabela <code class="mono">pai_filho</code> (nome do pai e nome do filho); 14) usando <code class="mono">WITH</code>, gravar nela todas as informações de pai e filho.</li><li>Entregar o arquivo .sql.</li></ol>
+        <details class="gabarito">
+          <summary>Como resolver (dicas, sem a resposta pronta)</summary>
+          <div class="gabarito-body">
+            <p class="tight">Tente primeiro no MySQL Workbench. Cada dica diz <strong>onde procurar</strong> e <strong>o que conferir</strong>; o código mesmo você escreve e testa.</p>
+            <ol class="passos"><li><strong>2:</strong> para testar depois, insira nomes que existam nas duas tabelas (ex.: um pai e um filho com o mesmo nome).</li><li><strong>3:</strong> <code class="mono">JOIN</code> entre <code class="mono">pai</code> e <code class="mono">filho</code> pela FK. Use apelidos de coluna diferentes.</li><li><strong>4:</strong> 1 coluna só empilhando resultados = <code class="mono">UNION ALL</code> (mantém repetidos) e <code class="mono">ORDER BY</code> no final.</li><li><strong>5:</strong> o mesmo, mas sem duplicidade = troque <code class="mono">UNION ALL</code> pelo comando que remove repetidos.</li><li><strong>6 e 7:</strong> comuns = <code class="mono">INTERSECT</code>; "está no 1º e não no 2º" = <code class="mono">EXCEPT</code>.</li><li><strong>8:</strong> é a diferença simétrica: (pais EXCEPT filhos) juntado com (filhos EXCEPT pais). <strong>Confira:</strong> nenhum nome comum aparece.</li><li><strong>9-11:</strong> <code class="mono">LEFT JOIN</code> + <code class="mono">COUNT</code> + <code class="mono">GROUP BY</code>. Filtro sobre a contagem só com <code class="mono">HAVING</code>. <strong>Teste</strong> o erro 1111 de propósito para nunca esquecer.</li><li><strong>10:</strong> una os nomes das duas tabelas (aqui repetidos contam!) e agrupe por nome.</li><li><strong>12:</strong> guarde o item 9 dentro de um <code class="mono">WITH</code> e filtre a quantidade no <code class="mono">WHERE</code> de fora.</li><li><strong>13-14:</strong> <code class="mono">CREATE TABLE</code> e depois <code class="mono">INSERT INTO ... WITH ... SELECT</code> (slide de WITH no INSERT).</li></ol>
+          </div>
+        </details>
+        <label class="feito"><input type="checkbox" data-ex="ex4"> Resolvi e testei este exercício</label>
+      </div>
+    </section>
+
+    <section class="topic" id="aula03">
+      <div class="topic-head"><span class="topic-num">03</span><h2 class="topic-title">Subquery e índice</h2></div>
+      <div class="aula-data">17/08 - 18/08/2026</div>
+      <p class="topic-intro">Uma consulta dentro de outra, em todos os comandos, e como acelerar buscas com índices.</p>
+      <ul class="pts"><li><strong>Subquery</strong> é uma query dentro de outra query: um <code class="mono">SELECT</code> dentro de outro comando.</li><li>Tabelas dos slides: <code class="mono">numero_par</code>, <code class="mono">numero_impar</code> e <code class="mono">numero_texto</code> (valor, texto em português, texto_ingles).</li></ul><h3 class="sub">Subquery no SELECT (5 lugares)</h3><div class="table-wrap"><table class="kv-table"><tr><th>#</th><th>Onde entra</th><th>Exemplo do slide</th></tr><tr><td>1</td><td>Como coluna do select</td><td><code class="mono">SELECT valor, (SELECT texto FROM numero_texto WHERE valor = numero_par.valor) AS 'Texto Português' FROM numero_par</code></td></tr><tr><td>2</td><td>Como filtro no WHERE</td><td><code class="mono">WHERE valor IN (SELECT valor FROM numero_par)</code></td></tr><tr><td>3</td><td>Como uma tabela (exige apelido)</td><td><code class="mono">FROM (SELECT valor FROM numero_impar ORDER BY valor) AS tabela</code></td></tr><tr><td>4</td><td>Como filtro no HAVING</td><td><code class="mono">GROUP BY valor HAVING valor IN (SELECT valor FROM numero_impar)</code></td></tr><tr><td>5</td><td>Como campo de ordenação</td><td><code class="mono">ORDER BY (SELECT texto FROM numero_texto WHERE valor = numero_par.valor)</code></td></tr></table></div><ul class="pts"><li>Se a subquery usada como coluna devolver <strong>2 colunas</strong> (<code class="mono">texto, texto_ingles</code>) dá <strong>erro 1241</strong> (Operand should contain 1 column).</li></ul><h3 class="sub">Subquery no INSERT, UPDATE e DELETE</h3><div class="code-wrap"><pre class="code"><span class="cm">-- INSERT: como fonte dos dados</span>
+<span class="kw">INSERT</span> <span class="kw">INTO</span> numero_par_texto(valor, texto, texto_ingles)
+<span class="kw">SELECT</span> valor, texto, texto_ingles <span class="kw">FROM</span> numero_texto <span class="kw">WHERE</span> valor % 2 = 0;
+
+<span class="cm">-- INSERT: como parte da informação</span>
+<span class="kw">INSERT</span> <span class="kw">INTO</span> numero_par_texto(valor, texto, texto_ingles)
+<span class="kw">VALUES</span> ((<span class="kw">SELECT</span> (COUNT(valor)+1)*2 <span class="kw">FROM</span> numero_par), <span class="str">''</span>, <span class="str">''</span>);
+
+<span class="cm">-- UPDATE: como nova informação</span>
+<span class="kw">UPDATE</span> numero_par_texto
+<span class="kw">SET</span> texto = (<span class="kw">SELECT</span> texto_ingles <span class="kw">FROM</span> numero_texto <span class="kw">WHERE</span> valor = numero_par_texto.valor);
+
+<span class="cm">-- UPDATE e DELETE: como filtro no WHERE</span>
+<span class="kw">UPDATE</span> numero_par_texto <span class="kw">SET</span> texto_ingles = <span class="str">'Texto em inglês'</span>
+<span class="kw">WHERE</span> valor <span class="kw">IN</span> (<span class="kw">SELECT</span> valor <span class="kw">FROM</span> numero_texto);
+
+<span class="kw">DELETE</span> <span class="kw">FROM</span> numero_par_texto
+<span class="kw">WHERE</span> valor <span class="kw">IN</span> (<span class="kw">SELECT</span> valor <span class="kw">FROM</span> numero_texto);</pre></div><div class="callout warn"><span class="cicon">!</span><div><p><strong>O que não pode:</strong> no <code class="mono">INSERT</code>, <code class="mono">UPDATE</code> e <code class="mono">DELETE</code> a subquery não pode usar a <strong>mesma tabela</strong> que está sendo alterada.</p></div></div><h3 class="sub">Índice e EXPLAIN ANALYZE</h3><ul class="pts"><li>Índice é como o índice de um livro: acha o assunto sem folhear página por página. Serve para <strong>otimizar buscas</strong>.</li><li>Use nas colunas mais usadas em busca. <strong>Cuidado:</strong> índice em tudo deixa inserir, atualizar e deletar mais custoso.</li><li><code class="mono">EXPLAIN ANALYZE</code> explica como o comando roda e quanto tempo levou, para ver (ou não) o ganho do índice.</li><li>Sem índice aparece <code class="mono">Table scan</code>; com índice, <code class="mono">Covering index scan</code> ou <code class="mono">range scan</code>.</li><li>Com 100 linhas o ganho é mínimo (0,0054 ms). Com <strong>121.643</strong> linhas, <code class="mono">WHERE valor &gt; 100 AND valor &lt; 1000</code> o índice economizou cerca de 28 ms no total: o banco leu só as 449 linhas do intervalo em vez de varrer todas.</li></ul><div class="code-wrap"><pre class="code"><span class="kw">CREATE</span> <span class="kw">INDEX</span> index_numero_par <span class="kw">ON</span> numero_par(valor);
+<span class="kw">DROP</span> <span class="kw">INDEX</span> index_numero_par <span class="kw">ON</span> numero_par;
+
+<span class="kw">EXPLAIN</span> <span class="kw">ANALYZE</span> <span class="kw">SELECT</span> valor <span class="kw">FROM</span> numero_par <span class="kw">WHERE</span> valor &gt; 100 <span class="kw">AND</span> valor &lt; 1000;</pre></div>
+      <div class="exbox">
+        <h3 class="sub">Exercício 5 — pessoa e automóvel <span class="due-chip">Turma A e B: 30/08</span></h3>
+        
+        <ol class="enunciado"><li>Tabelas: <code class="mono">pessoa</code> (id, nome VARCHAR(45), profissao VARCHAR(45), cnh VARCHAR(1)) e <code class="mono">automovel</code> (id, carro_moto VARCHAR(1), modelo VARCHAR(45), preco DECIMAL, id_pessoa). Relação 1:N.</li><li>1) criar as tabelas; 2) mín. 5 registros em cada, com pessoas sem automóvel e com mais de 1; 3) todas as informações de pessoa, mas mostrando 'Sim' ou 'Não' no lugar de 'S' ou 'N' na cnh; 4) nome da pessoa e quantidade de automóveis.</li><li>5) nome de todas as pessoas e, se tiver automóvel, se é 'Moto' ou 'Carro' e o modelo; 6) criar <code class="mono">pessoa_automovel</code> (nome da pessoa, modelo e preço); 7) com subquery, inserir nela só as pessoas que possuem automóveis; 8) nome da pessoa e o preço total dos automóveis, da garagem mais cara para a mais barata.</li><li>9) atualizar o preço de algum automóvel; 10) com subquery, atualizar na nova tabela o preço de todos os registros desse automóvel; 11) com subquery, buscar na nova tabela os automóveis de quem é 'Desenvolvedor' ou 'Médico'; 12) índice na nova tabela pela coluna modelo; 13) com nova tabela e pessoa, nome e profissão de quem não tem automóvel.</li><li>Entregar o arquivo .sql.</li></ol>
+        <details class="gabarito">
+          <summary>Como resolver (dicas, sem a resposta pronta)</summary>
+          <div class="gabarito-body">
+            <p class="tight">Tente primeiro no MySQL Workbench. Cada dica diz <strong>onde procurar</strong> e <strong>o que conferir</strong>; o código mesmo você escreve e testa.</p>
+            <ol class="passos"><li><strong>2:</strong> para testar depois, deixe uma pessoa com 0 carros e outra com 2 ou mais.</li><li><strong>3:</strong> <code class="mono">CASE WHEN cnh = 'S' THEN ... ELSE ... END AS ...</code> (aula 02).</li><li><strong>4:</strong> <code class="mono">LEFT JOIN</code> + <code class="mono">COUNT(automovel.id)</code> + <code class="mono">GROUP BY</code>. <strong>Confira:</strong> quem não tem carro deve aparecer com 0. Pergunte por que <code class="mono">COUNT(*)</code> daria 1.</li><li><strong>5:</strong> <code class="mono">LEFT JOIN</code> de novo, com um <code class="mono">CASE</code> sobre <code class="mono">carro_moto</code> (<code class="mono">'C'</code>/<code class="mono">'M'</code> ou como você gravou).</li><li><strong>6-7:</strong> <code class="mono">INSERT INTO ... SELECT</code> onde o filtro é uma subquery (slide <strong>Subquery - Insert 1</strong> e <strong>Select 2</strong>).</li><li><strong>8:</strong> <code class="mono">SUM(preco)</code> por pessoa e <code class="mono">ORDER BY</code> no total, decrescente.</li><li><strong>9-10:</strong> primeiro o <code class="mono">UPDATE</code> simples; depois <code class="mono">UPDATE</code> com subquery no <code class="mono">SET</code> (slide <strong>Update 1</strong>). Lembre que não pode usar a própria tabela na subquery.</li><li><strong>11:</strong> subquery com <code class="mono">IN</code> sobre o resultado de <code class="mono">pessoa</code> filtrado por profissão (slide <strong>Select 2</strong>).</li><li><strong>12-13:</strong> <code class="mono">CREATE INDEX</code> na coluna modelo; o item 13 é um "quem não está em": <code class="mono">NOT EXISTS</code> ou <code class="mono">NOT IN</code> (cuidado com <code class="mono">NULL</code>).</li></ol>
+          </div>
+        </details>
+        <label class="feito"><input type="checkbox" data-ex="ex5"> Resolvi e testei este exercício</label>
+      </div>
+    </section>
+
+    <section class="topic" id="aula04">
+      <div class="topic-head"><span class="topic-num">04</span><h2 class="topic-title">View</h2></div>
+      <div class="aula-data">24/08 - 25/08/2026</div>
+      <p class="topic-intro">Uma "tabela" virtual definida por um SELECT, útil para esconder colunas e guardar consultas frequentes.</p>
+      <ul class="pts"><li><strong>View</strong> significa visão: um jeito de olhar as informações. Parece uma tabela, mas não guarda os dados (não copia nada da tabela original).</li><li><strong>Para que serve:</strong> (1) dar acesso só a algumas colunas (permissão é por tabela, não por coluna) e (2) guardar uma consulta complicada e frequente, como um relatório.</li><li>Se entra um novo aluno na tabela original, ele aparece na view <strong>se</strong> estiver no resultado da consulta que monta a view.</li><li>A view pode ter <code class="mono">INNER JOIN</code>, <code class="mono">LEFT JOIN</code>, <code class="mono">RIGHT JOIN</code>, <code class="mono">UNION</code>, <code class="mono">INTERSECT</code> e <code class="mono">EXCEPT</code>: o <code class="mono">SELECT</code> é quem decide.</li></ul><div class="code-wrap"><pre class="code"><span class="kw">CREATE</span> <span class="kw">VIEW</span> view_aluno <span class="kw">AS</span>
+<span class="kw">SELECT</span> nome, ra
+<span class="kw">FROM</span> aluno
+<span class="kw">ORDER</span> <span class="kw">BY</span> nome;
+
+<span class="kw">DESC</span> view_aluno;
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> view_aluno;
+<span class="kw">DROP</span> <span class="kw">VIEW</span> view_aluno;</pre></div><h3 class="sub">A view aceita UPDATE, INSERT e DELETE?</h3><ul class="pts"><li>Depende da permissão. Numa view de <strong>uma tabela só e <code class="mono">SELECT</code> simples</strong>, sim, e <strong>mexe na tabela original</strong>.</li><li><code class="mono">UPDATE view_aluno SET ra = '999' WHERE nome = 'Danilo'</code> mudou o RA na tabela <code class="mono">aluno</code>.</li><li><code class="mono">INSERT</code> na view funciona, mas avisa <strong>1423</strong> (Field of view ... doesn't have a default value) porque as outras colunas são <code class="mono">NOT NULL</code>. Dependendo da política pode bloquear.</li><li><code class="mono">DELETE</code> na view também apaga da tabela original.</li><li>View com <code class="mono">UNION</code> (mais de uma fonte) é só leitura: <code class="mono">UPDATE</code> dá <strong>erro 1288</strong> (target table ... is not updatable).</li></ul>
+      <div class="exbox">
+        <h3 class="sub">Exercício 6 — filme e personagem <span class="due-chip">Turma A e B: 06/09</span></h3>
+        
+        <ol class="enunciado"><li>Tabelas: <code class="mono">filme</code> (id, titulo, tipo, diretor, ano_lancamento) e <code class="mono">personagem</code> (id, nome, especie, nivel_importancia, id_filme). Relação 1:N.</li><li>1) criar; 2) mín. 3 filmes e 10 personagens; 3) nome do filme e quantidade de personagens; 4) nome do diretor e quantidade de filmes dirigidos por ele; 5) nome, espécie e nível de importância de todos os personagens, ordenando pelo ano de lançamento do filme e depois do mais para o menos importante.</li><li>6) título do filme e nome dos personagens dos filmes de ação ou drama; 7) em 1 coluna só, o nome do diretor e dos personagens em ordem alfabética; 8) view <code class="mono">view_filme</code> (título e tipo); 9) buscar nela tudo ordenado pelo título; 10) view <code class="mono">view_personagem</code> (nome, espécie e id do filme); 11) com ela, nome do personagem e título do filme.</li><li>12) view <code class="mono">view_filme_personagem</code> (título, tipo, diretor, ano e nome do personagem) só dos filmes de ano de lançamento par; 13) título dos filmes de ano <strong>não</strong> par, sem usar <code class="mono">ano_lancamento</code> no filtro; 14) título, tipo, diretor, ano e personagem que <strong>não</strong> estão na <code class="mono">view_filme_personagem</code>.</li><li>Entregar o arquivo .sql.</li></ol>
+        <details class="gabarito">
+          <summary>Como resolver (dicas, sem a resposta pronta)</summary>
+          <div class="gabarito-body">
+            <p class="tight">Tente primeiro no MySQL Workbench. Cada dica diz <strong>onde procurar</strong> e <strong>o que conferir</strong>; o código mesmo você escreve e testa.</p>
+            <ol class="passos"><li><strong>2:</strong> varie os tipos (ação, drama, comédia) e os anos (pares e ímpares) para os testes fazerem sentido.</li><li><strong>3-4:</strong> <code class="mono">GROUP BY</code> com <code class="mono">COUNT</code>. No 4, agrupe pelo diretor.</li><li><strong>5:</strong> <code class="mono">JOIN</code> e <code class="mono">ORDER BY ano_lancamento, nivel_importancia DESC</code>.</li><li><strong>6:</strong> <code class="mono">WHERE tipo IN (...)</code>.</li><li><strong>7:</strong> 1 coluna = <code class="mono">UNION</code> entre diretores e nomes de personagens, ordenando no fim.</li><li><strong>8-11:</strong> <code class="mono">CREATE VIEW nome AS SELECT ...</code>. <strong>Teste:</strong> <code class="mono">DESC</code> da view e um <code class="mono">SELECT</code> normal nela. O item 11 é um <code class="mono">JOIN</code> em que a view faz o papel da tabela.</li><li><strong>12:</strong> o filtro "ano é par" está na aula 02 (resto da divisão por 2).</li><li><strong>13:</strong> você não pode filtrar por <code class="mono">ano_lancamento</code>. Pense: todos os filmes <strong>menos</strong> os que estão na view de pares. Qual comando de combinar faz "menos"? (Se a view não tiver o id do filme, inclua.)</li><li><strong>14:</strong> de novo "o que não está na view": compare com <code class="mono">NOT IN</code>/<code class="mono">NOT EXISTS</code> ou <code class="mono">EXCEPT</code> sobre as mesmas colunas.</li></ol>
+          </div>
+        </details>
+        <label class="feito"><input type="checkbox" data-ex="ex6"> Resolvi e testei este exercício</label>
+      </div>
+    </section>
+
+    <section class="topic" id="aula05">
+      <div class="topic-head"><span class="topic-num">05</span><h2 class="topic-title">Trigger e function</h2></div>
+      <div class="aula-data">31/08 - 01/09/2026</div>
+      <p class="topic-intro">Ações automáticas disparadas por INSERT, UPDATE e DELETE, e funções próprias que devolvem um valor.</p>
+      <h3 class="sub">Trigger (gatilho)</h3><ul class="pts"><li>Quando acontece um <code class="mono">INSERT</code>, <code class="mono">UPDATE</code> ou <code class="mono">DELETE</code>, o trigger executa uma ação automática. Pode ser <strong>antes ou depois</strong> de cada um dos três: 6 combinações.</li><li><code class="mono">NEW</code> é a linha nova (existe no INSERT e no UPDATE); <code class="mono">OLD</code> é a linha antiga (existe no UPDATE e no DELETE).</li><li>Os comandos de dentro têm <code class="mono">;</code>, que é o fim de uma query, então troque o delimitador: <code class="mono">DELIMITER $$</code> ... <code class="mono">END $$</code> ... <code class="mono">DELIMITER ;</code>.</li><li><code class="mono">SIGNAL SQLSTATE '45000'</code> gera uma exceção definida pelo usuário e o <code class="mono">MESSAGE_TEXT</code> é a mensagem. Aparece como <strong>erro 1644</strong>.</li><li><code class="mono">SHOW TRIGGERS;</code> lista os triggers e <code class="mono">SHOW CREATE TRIGGER nome</code> mostra um deles.</li></ul><div class="code-wrap"><div class="code-label">BEFORE INSERT: validar</div><pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE</span> <span class="kw">TRIGGER</span> trigger_before_insert_salario
+<span class="kw">BEFORE</span> <span class="kw">INSERT</span> <span class="kw">ON</span> salario
+<span class="kw">FOR</span> <span class="kw">EACH</span> <span class="kw">ROW</span>
+<span class="kw">BEGIN</span>
+  <span class="kw">IF</span> NEW.remuneracao &lt; 0 <span class="kw">THEN</span>
+    <span class="kw">SIGNAL</span> <span class="kw">SQLSTATE</span> <span class="str">'45000'</span>
+    <span class="kw">SET</span> MESSAGE_TEXT = <span class="str">'Remuneração deve ser positiva'</span>;
+  <span class="kw">END</span> <span class="kw">IF</span>;
+<span class="kw">END</span> $$
+<span class="kw">DELIMITER</span> ;</pre></div><div class="code-wrap"><div class="code-label">AFTER INSERT: registrar em outra tabela (log)</div><pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE</span> <span class="kw">TRIGGER</span> trigger_after_insert_salario
+<span class="kw">AFTER</span> <span class="kw">INSERT</span> <span class="kw">ON</span> salario
+<span class="kw">FOR</span> <span class="kw">EACH</span> <span class="kw">ROW</span>
+<span class="kw">BEGIN</span>
+  <span class="kw">INSERT</span> <span class="kw">INTO</span> log_salario(id_salario, nome_funcionario, remuneracao_anterior,
+                          remuneracao_nova, datahora, usuario)
+  <span class="kw">VALUES</span> (NEW.id, NEW.nome_funcionario, 0.0, NEW.remuneracao,
+          CURRENT_TIMESTAMP(), USER());
+<span class="kw">END</span> $$
+<span class="kw">DELIMITER</span> ;</pre></div><div class="code-wrap"><div class="code-label">As outras combinações (resumo)</div><pre class="code"><span class="kw">BEFORE</span> <span class="kw">UPDATE</span>:  <span class="kw">IF</span> OLD.remuneracao &gt; NEW.remuneracao <span class="kw">THEN</span> <span class="kw">SIGNAL</span> ... <span class="cm">-- não pode diminuir</span>
+<span class="kw">BEFORE</span> <span class="kw">DELETE</span>:  <span class="kw">IF</span> OLD.remuneracao &lt; (media/2) <span class="kw">OR</span> OLD.remuneracao = maximo <span class="kw">THEN</span> <span class="kw">SIGNAL</span> ...
+<span class="kw">AFTER</span> <span class="kw">DELETE</span>:   &lt;comandos&gt;   <span class="cm">-- só roda se o delete foi permitido</span></pre></div><ul class="pts"><li><strong>Problemas:</strong> um trigger que faz <code class="mono">INSERT</code> na <strong>mesma tabela</strong> que o disparou até pode ser criado, mas não executa: <strong>erro 1442</strong>.</li><li>Loop entre tabelas: insert na tabela 1 dispara trigger que escreve na 2, que dispara trigger que escreve na 1...</li><li><strong>Trigger x FK:</strong> o <code class="mono">DELETE</code> do id 2 passou pelo trigger, mas quem barrou foi a chave estrangeira (<strong>erro 1451</strong>).</li></ul><h3 class="sub">Function</h3><ul class="pts"><li>Como <code class="mono">AVG</code>, <code class="mono">COUNT</code>, <code class="mono">MAX</code>, <code class="mono">MIN</code>, <code class="mono">SUM</code>, mas <strong>criada por você</strong>. Recebe parâmetros e devolve um valor com <code class="mono">RETURN</code>.</li><li>Forma: <code class="mono">CREATE FUNCTION nome(parâmetros) RETURNS tipo &lt;DETERMINISTIC&gt; BEGIN ... RETURN ...; END$$</code>.</li><li>Chama-se dentro de um <code class="mono">SELECT</code>, linha a linha. <code class="mono">DROP FUNCTION nome</code> apaga.</li></ul><div class="code-wrap"><pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE</span> <span class="kw">FUNCTION</span> verificar_salario_2000(salario DECIMAL(9,2))
+<span class="kw">RETURNS</span> VARCHAR(100)
+<span class="kw">DETERMINISTIC</span>
+<span class="kw">BEGIN</span>
+  <span class="kw">DECLARE</span> resultado VARCHAR(100);
+  <span class="kw">IF</span> salario &gt;= 2000 <span class="kw">THEN</span> <span class="kw">SET</span> resultado = <span class="str">'Maior ou igual a 2000'</span>;
+  <span class="kw">ELSE</span> <span class="kw">SET</span> resultado = <span class="str">'Menor que 2000'</span>;
+  <span class="kw">END</span> <span class="kw">IF</span>;
+  <span class="kw">RETURN</span> resultado;
+<span class="kw">END</span>$$
+<span class="kw">DELIMITER</span> ;
+
+<span class="kw">SELECT</span> *, verificar_salario_2000(remuneracao) <span class="kw">FROM</span> salario;</pre></div>
+      <div class="exbox">
+        <h3 class="sub">Exercício 7 — animal e animal_feroz <span class="due-chip">Turma A e B: 13/09</span></h3>
+        
+        <ol class="enunciado"><li>Tabelas: <code class="mono">animal</code> (id, especie VARCHAR(100), nivel_feroz INT, herbivoro_carnivoro VARCHAR(1)) e <code class="mono">animal_feroz</code> (id, especie, herbivoro_carnivoro, registros INT).</li><li>1) criar as tabelas; 2) trigger <strong>antes</strong> de inserir: nivel_feroz entre 1 e 5, senão mensagem de erro; 3) trigger <strong>depois</strong> de inserir: se nivel_feroz for 4 ou 5, cadastrar em <code class="mono">animal_feroz</code> com registros = 1; 4) criar 6 animais (5 válidos e 1 com nivel inválido).</li><li>5) trigger <strong>antes</strong> de atualizar: se mudar a espécie, não deixar; 6) atualizar um animal mudando a espécie para "espécie inválida"; 7) trigger <strong>depois</strong> de atualizar: incrementar <code class="mono">registros</code> daquele animal se for feroz; 8) atualizar 1 animal feroz e 1 que não é feroz.</li><li>9) trigger <strong>antes</strong> de deletar: se for herbívoro, não permitir; 10) apagar um herbívoro; 11) trigger <strong>depois</strong> de deletar: apagar o animal de <code class="mono">animal_feroz</code>; 12) apagar um animal de nivel 4 ou 5.</li><li>13) função que recebe a espécie e retorna "Animal feroz!" ou "Animal não é muito feroz!" conforme exista ou não em <code class="mono">animal_feroz</code>; 14) todos os animais + a função; 15) função que recebe a letra inicial e retorna "Herbívoro" ou "Carnívoro"; 16) espécie + essa função.</li><li>Entregar o arquivo .sql.</li></ol>
+        <details class="gabarito">
+          <summary>Como resolver (dicas, sem a resposta pronta)</summary>
+          <div class="gabarito-body">
+            <p class="tight">Tente primeiro no MySQL Workbench. Cada dica diz <strong>onde procurar</strong> e <strong>o que conferir</strong>; o código mesmo você escreve e testa.</p>
+            <ol class="passos"><li><strong>Ordem que evita dor de cabeça:</strong> crie a tabela, depois <strong>um trigger de cada vez</strong>, e teste cada um antes do próximo (o item 4 é o teste dos 2 e 3).</li><li><strong>2:</strong> modelo do slide <code class="mono">BEFORE INSERT</code> (Remuneração deve ser positiva). Troque a condição para fora do intervalo 1 a 5.</li><li><strong>3:</strong> modelo do <code class="mono">AFTER INSERT</code> (log_salario), mas com <code class="mono">IF NEW.nivel_feroz IN (4,5)</code> em volta.</li><li><strong>4-6:</strong> rode um <code class="mono">INSERT</code> inválido e <strong>leia o erro 1644</strong>. No 5 compare <code class="mono">OLD.especie</code> com <code class="mono">NEW.especie</code> (<code class="mono">&lt;&gt;</code>).</li><li><strong>7-8:</strong> <code class="mono">AFTER UPDATE</code> com <code class="mono">UPDATE animal_feroz SET registros = registros + 1 ...</code>. <strong>Teste:</strong> o animal comum não pode mudar <code class="mono">animal_feroz</code>.</li><li><strong>9-10:</strong> <code class="mono">BEFORE DELETE</code> olhando <code class="mono">OLD.herbivoro_carnivoro</code>. <strong>Confira</strong> se o bloqueio veio do trigger (1644) e não de FK (1451).</li><li><strong>11-12:</strong> <code class="mono">AFTER DELETE</code> que apaga por espécie. <strong>Atenção ao erro 1442:</strong> só pode mexer em <code class="mono">animal_feroz</code>, nunca em <code class="mono">animal</code> dentro do trigger de <code class="mono">animal</code>.</li><li><strong>13-14:</strong> modelo <code class="mono">verificar_salario_media</code> (função que consulta outra tabela). Use <code class="mono">EXISTS</code>/<code class="mono">COUNT</code> em <code class="mono">animal_feroz</code> dentro da função.</li><li><strong>15-16:</strong> modelo <code class="mono">verificar_salario_2000</code> com <code class="mono">IF</code> puro sobre o parâmetro.</li></ol>
+          </div>
+        </details>
+        <label class="feito"><input type="checkbox" data-ex="ex7"> Resolvi e testei este exercício</label>
+      </div>
+    </section>
+
+    <section class="topic" id="aula06">
+      <div class="topic-head"><span class="topic-num">06</span><h2 class="topic-title">Stored procedure</h2></div>
+      <div class="aula-data">08/09 e 14/09/2026</div>
+      <p class="topic-intro">Blocos de comandos guardados no banco, com parâmetros de entrada e saída, laços e erros próprios.</p>
+      <ul class="pts"><li><strong>Stored procedure</strong> é um bloco de comandos guardado no banco e executado com <code class="mono">CALL</code>. Diferente da function, não precisa devolver valor.</li><li>Parâmetros: <code class="mono">IN</code> (entra, padrão), <code class="mono">OUT</code> (sai, lido depois numa variável <code class="mono">@x</code>) e <code class="mono">INOUT</code> (entra e sai).</li><li>Laços: <code class="mono">WHILE ... DO ... END WHILE</code> e <code class="mono">REPEAT ... UNTIL cond END REPEAT</code>. Erros com <code class="mono">SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = '...'</code>.</li><li>Exemplos dos slides: <code class="mono">selecionar_1_disciplina</code>, <code class="mono">selecionar_prova_com_x_questoes</code>, <code class="mono">verificar_resposta</code>, <code class="mono">contagem_regressiva</code> (WHILE) e <code class="mono">contagem_regressiva_repeat</code>.</li></ul><div class="code-wrap"><pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE</span> <span class="kw">PROCEDURE</span> contar_automoveis(<span class="kw">OUT</span> p_total INT)
+<span class="kw">BEGIN</span>
+  <span class="kw">SELECT</span> COUNT(*) <span class="kw">INTO</span> p_total <span class="kw">FROM</span> automovel;
+<span class="kw">END</span>$$
+<span class="kw">DELIMITER</span> ;
+
+<span class="kw">CALL</span> contar_automoveis(@total);
+<span class="kw">SELECT</span> @total;</pre></div><p class="tight">A explicação completa (IN/OUT/INOUT, laços, SIGNAL e erros 1305, 1318 e 1064) está na <a href="index.html#stored-procedure">seção Stored Procedure do guia principal</a>.</p>
+      <div class="exbox">
+        <h3 class="sub">Exercício 8 — automóvel e tabuada (stored procedures) <span class="due-chip">Turma A: 27/09 · Turma B: 20/09</span></h3>
+        
+        <ol class="enunciado"><li>Tabelas: <code class="mono">automovel</code> (id, carro_moto VARCHAR(1), placa VARCHAR(7), marca, modelo, proprietario VARCHAR(100)) e <code class="mono">tabuada</code> (id, n1, n2, resultado).</li><li>Procedure sem parâmetros que preenche a tabuada de 1 a 10; procedure com <code class="mono">n1</code> e <code class="mono">n2</code> de entrada e o id de saída; mostrar a chamada e como exibir o resultado.</li><li>Procedure com parâmetro de entrada e saída: se o número for primo devolve o próprio número; se não, multiplica pelas ocorrências do número na tabuada. Chamar 3 vezes (primo, resultado de tabuada, não resultado).</li><li>Procedure de 7 parâmetros (ação + 6 campos) com INSERIR, ATUALIZAR e EXCLUIR, usando <code class="mono">SIGNAL</code> com os textos exatos 'Erro - Placa já cadastrada', 'Erro - Id não existe' e 'Erro - Ação desconhecida'. Chamar 7 vezes (inserir OK e com erro, atualizar OK e com erro, excluir OK e com erro, ação inexistente).</li><li>Entregar um único arquivo .sql.</li></ol>
+        <details class="gabarito">
+          <summary>Como resolver (dicas, sem a resposta pronta)</summary>
+          <div class="gabarito-body">
+            <p class="tight">Tente primeiro no MySQL Workbench. Cada dica diz <strong>onde procurar</strong> e <strong>o que conferir</strong>; o código mesmo você escreve e testa.</p>
+            <ol class="passos"><li><strong>Tabuada:</strong> dois <code class="mono">WHILE</code> aninhados (n1 de 1 a 10 e n2 de 1 a 10), com um <code class="mono">INSERT</code> dentro do interno. <strong>Teste:</strong> <code class="mono">SELECT COUNT(*)</code> deve dar 100.</li><li><strong>Com OUT:</strong> <code class="mono">INSERT</code> e depois <code class="mono">SELECT LAST_INSERT_ID() INTO p_id</code> (ou <code class="mono">SELECT ... INTO</code>). Chame com <code class="mono">@id</code> e depois <code class="mono">SELECT @id</code>.</li><li><strong>INOUT:</strong> primeiro decida se é primo (teste divisores até a raiz do número, <code class="mono">FLOOR(SQRT(n))</code>); só se não for primo conte as ocorrências na <code class="mono">tabuada</code>.</li><li><strong>Chamadas do INOUT:</strong> o argumento tem que ser variável (<code class="mono">SET @n = 7; CALL ...(@n); SELECT @n;</code>), nunca um número solto.</li><li><strong>7 parâmetros:</strong> um <code class="mono">IF p_acao = 'INSERIR' ... ELSEIF ... ELSE SIGNAL ...</code>. Antes de inserir, verifique a placa; antes de atualizar ou excluir, verifique se o id existe (<code class="mono">IF NOT EXISTS (SELECT 1 ...)</code>).</li><li><strong>Textos dos erros exatamente</strong> como no enunciado, com hífen e acento. <strong>Teste</strong> as 7 chamadas e confira que os 3 erros aparecem como <strong>erro 1644</strong>.</li><li>Lembre o <code class="mono">DELIMITER $$</code> antes e <code class="mono">DELIMITER ;</code> depois de cada procedure (sem isso: erro 1064).</li></ol>
+          </div>
+        </details>
+        <label class="feito"><input type="checkbox" data-ex="ex8"> Resolvi e testei este exercício</label>
+      </div>
+    </section>
+
+    <section class="topic" id="aula07">
+      <div class="topic-head"><span class="topic-num">07</span><h2 class="topic-title">Revisão e APEX</h2></div>
+      <div class="aula-data">21/09 - 22/09/2026</div>
+      <p class="topic-intro">Fechamento do 1º bimestre.</p>
+      <ul class="pts"><li><strong>Revisão geral:</strong> UNION/INTERSECT/EXCEPT, CASE, HAVING, WITH, subqueries, índices, views, triggers, functions e stored procedures.</li><li><strong>APEX do 1º bimestre</strong> (atividade prática de extensão, vale 0-1).</li><li>A <strong>Avaliação do 1º bimestre</strong> é na aula 08-09, em <strong>28/09 e 29/09</strong>.</li><li>Depois: transação, concorrência e controle (05/10 e 06/10) e NoSQL com MongoDB (19/10 a 27/10).</li></ul><div class="callout good"><span class="cicon">✓</span><div><p><strong>Método de estudo:</strong> para cada tópico acima, abra o guia, esconda o código, escreva a consulta do zero no Workbench e só depois compare. Errou? O erro cai na tabela de erros do <a href="index.html#erros">guia principal</a>.</p></div></div>
+    </section>
+
+  </div>
+</main>
+
+<footer class="shell">
+  Baseado nos slides de Banco de Dados e Aplicações (Danilo Rios). As dicas guiam o raciocínio; os gabaritos ficam por sua conta.
+</footer>
+
+<script>
+(function () {
+  var ids = ["ex1", "ex2", "ex3", "ex4", "ex5", "ex6", "ex7", "ex8"];
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem("sqlGuiaAulas") || "{}") || {}; } catch (e) {}
+  function refresh() {
+    var n = ids.filter(function (i) { return saved[i]; }).length;
+    document.getElementById("prog").textContent = n + " de " + ids.length + " exercícios feitos";
+  }
+  document.querySelectorAll("input[data-ex]").forEach(function (cb) {
+    cb.checked = !!saved[cb.dataset.ex];
+    cb.addEventListener("change", function () {
+      saved[cb.dataset.ex] = cb.checked;
+      try { localStorage.setItem("sqlGuiaAulas", JSON.stringify(saved)); } catch (e) {}
+      refresh();
+    });
+  });
+  refresh();
+})();
+</script>
+
+</body>
+</html>

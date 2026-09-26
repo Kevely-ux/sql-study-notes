@@ -14,6 +14,8 @@ Construído como uma única página estática (HTML/CSS puro, sem dependências 
 
 ## Conteúdo
 
+Além do guia por tópico, a página [Guia por aula](https://Kevely-ux.github.io/sql-study-notes/aulas.html) organiza os slides de cada aula e traz, para cada exercício, um "Como resolver" com dicas (sem gabarito pronto).
+
 | # | Tópico |
 |---|---|
 | 1 | Criar tabelas (`CREATE TABLE`, `PRIMARY KEY`, `FOREIGN KEY`) |
