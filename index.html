@@ -351,7 +351,8 @@
     <a href="#views">11. Views</a>
     <a href="#trigger">12. Trigger</a>
     <a href="#function">13. Function</a>
-    <a href="#erros" class="err-link">14. Referência de erros ↓</a>
+    <a href="#stored-procedure">14. Stored Procedure</a>
+    <a href="#erros" class="err-link">15. Referência de erros ↓</a>
   </nav>
 
   <div class="content">
@@ -991,8 +992,127 @@
       </div>
     </section>
 
+    <section class="topic" id="stored-procedure">
+      <div class="topic-head"><span class="topic-num">14</span><h2 class="topic-title">Stored Procedure</h2></div>
+      <p class="topic-intro">Uma <code class="mono">PROCEDURE</code> é um bloco de comandos SQL guardado no banco e executado com <code class="mono">CALL</code>. Diferente da function, ela <strong>não precisa devolver valor</strong>: pode fazer <code class="mono">INSERT</code>/<code class="mono">UPDATE</code>, mostrar um <code class="mono">SELECT</code> ou devolver resultados por parâmetros <code class="mono">OUT</code>.</p>
+
+      <div class="code-wrap">
+        <div class="code-label">Sintaxe base</div>
+        <pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE PROCEDURE</span> &lt;nome&gt;(&lt;IN | OUT | INOUT&gt; &lt;parâmetro&gt; &lt;tipo&gt;, ...)
+<span class="kw">BEGIN</span>
+    &lt;comandos&gt;
+<span class="kw">END</span>$$
+<span class="kw">DELIMITER</span> ;
+
+<span class="kw">CALL</span> &lt;nome&gt;(&lt;argumentos&gt;);
+<span class="kw">DROP PROCEDURE</span> &lt;nome&gt;;</pre>
+      </div>
+      <p class="tight">O <code class="mono">DELIMITER $$</code> troca o fim de comando de <code class="mono">;</code> para <code class="mono">$$</code>, senão o Workbench encerra a criação no primeiro <code class="mono">;</code> de dentro do corpo.</p>
+
+      <h3 class="sub">Os três tipos de parâmetro</h3>
+      <div class="table-wrap"><table class="kv-table">
+        <tr><th>Modo</th><th>Sentido</th><th>Uso</th></tr>
+        <tr><td class="mono">IN</td><td>entra (é o padrão)</td><td>A procedure só lê o valor recebido</td></tr>
+        <tr><td class="mono">OUT</td><td>sai</td><td>A procedure preenche; quem chamou lê depois em uma variável <code class="mono">@x</code></td></tr>
+        <tr><td class="mono">INOUT</td><td>entra e sai</td><td>Recebe um valor, altera e devolve no mesmo parâmetro</td></tr>
+      </table></div>
+
+      <h3 class="sub">Só entrada (IN)</h3>
+      <div class="code-wrap">
+        <pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE PROCEDURE</span> selecionar_1_disciplina(<span class="kw">IN</span> p_id <span class="kw">INT</span>)
+<span class="kw">BEGIN</span>
+    <span class="kw">SELECT</span> * <span class="kw">FROM</span> disciplina <span class="kw">WHERE</span> id = p_id;
+<span class="kw">END</span>$$
+<span class="kw">DELIMITER</span> ;
+
+<span class="kw">CALL</span> selecionar_1_disciplina(3);</pre>
+      </div>
+
+      <h3 class="sub">Devolvendo valor (OUT)</h3>
+      <div class="code-wrap">
+        <pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE PROCEDURE</span> contar_automoveis(<span class="kw">OUT</span> p_total <span class="kw">INT</span>)
+<span class="kw">BEGIN</span>
+    <span class="kw">SELECT COUNT</span>(*) <span class="kw">INTO</span> p_total <span class="kw">FROM</span> automovel;
+<span class="kw">END</span>$$
+<span class="kw">DELIMITER</span> ;
+
+<span class="kw">CALL</span> contar_automoveis(@total);
+<span class="kw">SELECT</span> @total;</pre>
+      </div>
+      <p class="tight"><code class="mono">SELECT ... INTO</code> guarda o resultado dentro do parâmetro. Se a consulta não devolver nenhuma linha, o MySQL dá o aviso <code class="mono">1329 No data</code>; se devolver mais de uma, o erro <code class="mono">1172</code>.</p>
+
+      <h3 class="sub">Entrada e saída juntas (INOUT)</h3>
+      <div class="code-wrap">
+        <pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE PROCEDURE</span> dobrar(<span class="kw">INOUT</span> p_numero <span class="kw">INT</span>)
+<span class="kw">BEGIN</span>
+    <span class="kw">SET</span> p_numero = p_numero * 2;
+<span class="kw">END</span>$$
+<span class="kw">DELIMITER</span> ;
+
+<span class="kw">SET</span> @n = 7;
+<span class="kw">CALL</span> dobrar(@n);
+<span class="kw">SELECT</span> @n;   <span class="cm">-- 14</span></pre>
+      </div>
+      <p class="tight">No <code class="mono">INOUT</code> o argumento precisa ser uma <strong>variável</strong> (<code class="mono">@n</code>) já com valor; passar um número literal dá erro, porque não há onde devolver o resultado.</p>
+
+      <h3 class="sub">Laços: WHILE e REPEAT</h3>
+      <div class="code-wrap">
+        <pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE PROCEDURE</span> contagem_regressiva(<span class="kw">IN</span> p_inicio <span class="kw">INT</span>)
+<span class="kw">BEGIN</span>
+    <span class="kw">WHILE</span> p_inicio &gt; 0 <span class="kw">DO</span>
+        <span class="kw">SELECT</span> p_inicio;
+        <span class="kw">SET</span> p_inicio = p_inicio - 1;
+    <span class="kw">END WHILE</span>;
+<span class="kw">END</span>$$
+
+<span class="kw">CREATE PROCEDURE</span> contagem_regressiva_repeat(<span class="kw">IN</span> p_inicio <span class="kw">INT</span>)
+<span class="kw">BEGIN</span>
+    <span class="kw">REPEAT</span>
+        <span class="kw">SELECT</span> p_inicio;
+        <span class="kw">SET</span> p_inicio = p_inicio - 1;
+    <span class="kw">UNTIL</span> p_inicio &lt;= 0
+    <span class="kw">END REPEAT</span>;
+<span class="kw">END</span>$$
+<span class="kw">DELIMITER</span> ;</pre>
+      </div>
+      <p class="tight"><code class="mono">WHILE</code> testa a condição <strong>antes</strong> (pode nem rodar); <code class="mono">REPEAT</code> testa <strong>depois</strong> (roda ao menos uma vez) e termina quando a condição do <code class="mono">UNTIL</code> fica verdadeira — a lógica é invertida em relação ao <code class="mono">WHILE</code>.</p>
+
+      <h3 class="sub">Decisão com IF e erro com SIGNAL</h3>
+      <div class="code-wrap">
+        <pre class="code"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE PROCEDURE</span> gerenciar_automovel(<span class="kw">IN</span> p_acao <span class="kw">VARCHAR</span>(10), <span class="kw">IN</span> p_id <span class="kw">INT</span>)
+<span class="kw">BEGIN</span>
+    <span class="kw">IF</span> p_acao = <span class="str">'EXCLUIR'</span> <span class="kw">THEN</span>
+        <span class="kw">IF NOT EXISTS</span> (<span class="kw">SELECT</span> 1 <span class="kw">FROM</span> automovel <span class="kw">WHERE</span> id = p_id) <span class="kw">THEN</span>
+            <span class="kw">SIGNAL SQLSTATE</span> <span class="str">'45000'</span> <span class="kw">SET</span> MESSAGE_TEXT = <span class="str">'Erro - Id não existe'</span>;
+        <span class="kw">END IF</span>;
+        <span class="kw">DELETE FROM</span> automovel <span class="kw">WHERE</span> id = p_id;
+    <span class="kw">ELSE</span>
+        <span class="kw">SIGNAL SQLSTATE</span> <span class="str">'45000'</span> <span class="kw">SET</span> MESSAGE_TEXT = <span class="str">'Erro - Ação desconhecida'</span>;
+    <span class="kw">END IF</span>;
+<span class="kw">END</span>$$
+<span class="kw">DELIMITER</span> ;
+
+<span class="kw">CALL</span> gerenciar_automovel(<span class="str">'EXCLUIR'</span>, 99);
+<span class="cm">-- Error Code: 1644. Erro - Id não existe</span></pre>
+      </div>
+      <p class="tight">É o mesmo <code class="mono">SIGNAL</code> do trigger: interrompe a procedure com o erro <code class="mono">1644</code> e a mensagem que você escolheu. O <code class="mono">SQLSTATE '45000'</code> significa "erro definido pelo usuário".</p>
+
+      <div class="callout good">
+        <span class="cicon">✓</span>
+        <div>
+          <p><strong>Procedure vs Function:</strong> a procedure é chamada com <code class="mono">CALL</code>, pode ter <code class="mono">OUT</code>/<code class="mono">INOUT</code> e pode alterar dados à vontade. A function é usada dentro de um <code class="mono">SELECT</code> e devolve exatamente um valor com <code class="mono">RETURN</code>.</p>
+        </div>
+      </div>
+    </section>
+
     <section class="topic" id="erros">
-      <div class="topic-head"><span class="topic-num">14</span><h2 class="topic-title">Referência rápida de erros</h2></div>
+      <div class="topic-head"><span class="topic-num">15</span><h2 class="topic-title">Referência rápida de erros</h2></div>
       <p class="topic-intro">Os erros reais que apareceram nos exercícios — guarde essa tabela, 90% dos erros de SQL de iniciante se repetem.</p>
 
       <div class="err-table-wrap">
@@ -1083,6 +1203,24 @@
             <td>Mover essa lógica pra uma tabela diferente, ou tratar fora do trigger</td>
           </tr>
           <tr>
+            <td class="code-cell"><span class="err-badge">1305</span></td>
+            <td>PROCEDURE banco.x does not exist</td>
+            <td><span class="mono">CALL</span> de uma procedure que não foi criada (ou nome/banco errado)</td>
+            <td>Rodar o <span class="mono">CREATE PROCEDURE</span> antes e conferir o nome e o banco em uso</td>
+          </tr>
+          <tr>
+            <td class="code-cell"><span class="err-badge">1318</span></td>
+            <td>Incorrect number of arguments for PROCEDURE</td>
+            <td><span class="mono">CALL</span> com mais ou menos argumentos do que a procedure declara</td>
+            <td>Passar um argumento para cada parâmetro, na ordem (inclusive os <span class="mono">OUT</span>)</td>
+          </tr>
+          <tr>
+            <td class="code-cell"><span class="err-badge">1064</span></td>
+            <td>You have an error in your SQL syntax (ao criar procedure)</td>
+            <td>Faltou o <span class="mono">DELIMITER $$</span>: o Workbench cortou o corpo no primeiro <span class="mono">;</span></td>
+            <td>Envolver com <span class="mono">DELIMITER $$ ... END$$ DELIMITER ;</span></td>
+          </tr>
+          <tr>
             <td class="code-cell"><span class="err-badge">1451</span></td>
             <td>Cannot delete or update a parent row: a foreign key constraint fails</td>
             <td>Tentou apagar uma linha que ainda tem outra tabela apontando pra ela via <span class="mono">FOREIGN KEY</span></td>
@@ -1097,8 +1235,8 @@
       <div class="callout good">
         <span class="cicon">✓</span>
         <div>
-          <p><strong>Exercício 7</strong> (tabelas <code class="mono">animal</code> e <code class="mono">animal_feroz</code>) junta tudo desse guia sobre <code class="mono">TRIGGER</code> e <code class="mono">FUNCTION</code>: um trigger <code class="mono">BEFORE INSERT</code> validando faixa de valor (itens 2-4), um <code class="mono">AFTER INSERT</code> condicional que só grava em <code class="mono">animal_feroz</code> quando o bicho é feroz (item 3), um <code class="mono">BEFORE UPDATE</code> bloqueando mudança de espécie (itens 5-6), um <code class="mono">AFTER UPDATE</code> incrementando contador (itens 7-8), <code class="mono">BEFORE</code>/<code class="mono">AFTER DELETE</code> (itens 9-12), e duas <code class="mono">FUNCTION</code>s — uma que consulta outra tabela pra decidir o retorno (item 13) e outra que só faz <code class="mono">IF/ELSE</code> puro sobre o parâmetro (item 15).</p>
-          <p><strong>Prazo:</strong> Turma A e Turma B — 13/09.</p>
+          <p><strong>Exercício 8</strong> (tabelas <code class="mono">automovel</code> e <code class="mono">tabuada</code>) usa <code class="mono">STORED PROCEDURE</code>: uma procedure sem parâmetros que preenche a tabuada de 1 a 10 com dois <code class="mono">WHILE</code> aninhados, outra com <code class="mono">n1</code>/<code class="mono">n2</code> de entrada e o id de saída (<code class="mono">OUT</code>), uma com <code class="mono">INOUT</code> que testa se o número é primo (senão multiplica pelas ocorrências na tabuada) e uma de 7 parâmetros que faz <code class="mono">INSERIR</code>/<code class="mono">ATUALIZAR</code>/<code class="mono">EXCLUIR</code> lançando erro com <code class="mono">SIGNAL</code> ("Erro - Placa já cadastrada", "Erro - Id não existe", "Erro - Ação desconhecida"). Entrega em um único arquivo <code class="mono">.sql</code>.</p>
+          <p><strong>Prazo:</strong> Turma A — 27/09 · Turma B — 20/09.</p>
         </div>
       </div>
     </section>

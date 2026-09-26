@@ -27,7 +27,10 @@ Construído como uma única página estática (HTML/CSS puro, sem dependências 
 | 9 | Atualizar dados (`UPDATE`, Safe Update Mode) |
 | 10 | Índices (`CREATE INDEX`, `EXPLAIN ANALYZE`) |
 | 11 | Views (`CREATE VIEW`, regras de atualização) |
-| 12 | Referência rápida de erros (códigos reais do MySQL) |
+| 12 | Trigger (`BEFORE`/`AFTER`, `NEW`/`OLD`, `SIGNAL`) |
+| 13 | Function (`RETURNS`, `DETERMINISTIC`, chamada dentro do `SELECT`) |
+| 14 | Stored Procedure (`IN`/`OUT`/`INOUT`, `WHILE`/`REPEAT`, `SIGNAL`) |
+| 15 | Referência rápida de erros (códigos reais do MySQL) |
 
 ## Tecnologias
 
